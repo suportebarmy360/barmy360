@@ -339,7 +339,16 @@ input[type="file"]{border-style:dashed;background:rgba(255,255,255,.035)}
     box-sizing: border-box;
     overflow: hidden;
   }
-
+.detail-hero,
+.help-detail,
+.glow-card {
+  width: calc(100vw - 32px) !important;
+  max-width: calc(100vw - 32px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
   .detail-hero img,
   .help-detail img,
   .glow-card img {
