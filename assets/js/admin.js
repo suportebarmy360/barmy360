@@ -1,0 +1,1083 @@
+const sb = () => window.BARMY360_SUPABASE;
+const LS_POSTS = "barmy360_posts";
+const LS_PROJECTS = "barmy360_projects";
+const LS_SITE = "barmy360_site_settings";
+const LS_HELP = "barmy360_help_items";
+const LS_STREAM = "barmy360_stream_items";
+const LS_VOTACOES = "barmy360_votacoes";
+const LS_OPCOES = "barmy360_opcoes_votacao";
+const LS_PHRASES = "barmy360_phrase_submissions";
+
+
+function val(id) {
+  return document.getElementById(id)?.value?.trim() || "";
+}
+
+function setMsg(id, msg) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = msg;
+}
+
+
+async function uploadImageToField(fileInputId, targetInputId, msgId) {
+  const input = document.getElementById(fileInputId);
+  const target = document.getElementById(targetInputId);
+  const file = input?.files?.[0];
+
+  if (!file) return;
+  if (!target) return;
+  if (!sb()) {
+    setMsg(msgId, "Supabase não conectado. Confira assets/js/config.js.");
+    return;
+  }
+
+  try {
+    setMsg(msgId, "Enviando imagem...");
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 80);
+    const path = `${targetInputId}/${Date.now()}-${Math.random().toString(16).slice(2)}-${safeName || "imagem." + ext}`;
+
+    const { error: uploadError } = await sb().storage
+      .from("barmy360-images")
+      .upload(path, file, { cacheControl: "3600", upsert: false });
+
+    if (uploadError) {
+      setMsg(msgId, "Erro no upload: " + uploadError.message + " — rode o SQL de storage do ZIP.");
+      return;
+    }
+
+    const { data } = sb().storage.from("barmy360-images").getPublicUrl(path);
+    target.value = data.publicUrl;
+    setMsg(msgId, "Imagem enviada e URL preenchida.");
+  } catch (err) {
+    console.error(err);
+    setMsg(msgId, "Erro no upload: " + (err.message || err));
+  }
+}
+
+window.uploadImageToField = uploadImageToField;
+
+async function uploadImagesToTextarea(fileInputId, targetTextareaId, msgId) {
+  const input = document.getElementById(fileInputId);
+  const target = document.getElementById(targetTextareaId);
+  const files = Array.from(input?.files || []);
+
+  if (!files.length || !target) return;
+  if (!sb()) {
+    setMsg(msgId, "Supabase não conectado. Confira assets/js/config.js.");
+    return;
+  }
+
+  const urls = [];
+  try {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setMsg(msgId, `Enviando foto adicional ${i + 1}/${files.length}...`);
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 80);
+      const path = `${targetTextareaId}/${Date.now()}-${i}-${Math.random().toString(16).slice(2)}-${safeName || "imagem." + ext}`;
+      const { error: uploadError } = await sb().storage
+        .from("barmy360-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      if (uploadError) {
+        setMsg(msgId, "Erro no upload: " + uploadError.message + " — rode o SQL de storage do ZIP.");
+        return;
+      }
+      const { data } = sb().storage.from("barmy360-images").getPublicUrl(path);
+      urls.push(data.publicUrl);
+    }
+    const existing = target.value.trim();
+    target.value = [existing, ...urls].filter(Boolean).join("\n");
+    input.value = "";
+    setMsg(msgId, `${urls.length} foto(s) adicional(is) enviada(s).`);
+  } catch (err) {
+    console.error(err);
+    setMsg(msgId, "Erro no upload: " + (err.message || err));
+  }
+}
+
+window.uploadImagesToTextarea = uploadImagesToTextarea;
+
+function escapeHtml(v) {
+  return String(v || "").replace(/[&<>'"]/g, (c) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;",
+  }[c]));
+}
+
+async function adminLogin() {
+  const email = val("adminEmail");
+  const password = document.getElementById("adminPassword")?.value || "";
+  const msg = document.getElementById("loginMsg");
+
+  if (!email || !password) {
+    msg.textContent = "Preencha e-mail e senha.";
+    return;
+  }
+
+  if (!sb()) {
+    msg.textContent = "Supabase não conectado. Confira assets/js/config.js.";
+    return;
+  }
+
+  const { error } = await sb().auth.signInWithPassword({ email, password });
+
+  if (error) {
+    console.error("Erro Supabase Auth:", error);
+    msg.textContent = "Erro no login: " + error.message;
+    return;
+  }
+
+  document.getElementById("loginArea").classList.add("hidden");
+  document.getElementById("dashboardArea").classList.remove("hidden");
+  loadAdminData();
+}
+
+async function adminLogout() {
+  if (sb()) await sb().auth.signOut();
+  location.reload();
+}
+
+function showAdminTab(name, btn) {
+  document
+    .querySelectorAll(".admin-tab-panel")
+    .forEach((p) => p.classList.add("hidden"));
+
+  document.getElementById("tab-" + name)?.classList.remove("hidden");
+
+  document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+  btn?.classList.add("active");
+}
+
+async function savePost() {
+  const post = {
+    title: val("postTitle"),
+    content: val("postContent"),
+    author: val("postAuthor") || "ADM",
+    image_url: val("postImage"),
+  };
+
+  if (!post.title || !post.content) {
+    return setMsg("postMsg", "Preencha título e texto.");
+  }
+
+  if (sb()) {
+    const { error } = await sb().from("community_posts").insert(post);
+    if (error) return setMsg("postMsg", "Erro: " + error.message);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_POSTS) || "[]");
+    arr.push({ ...post, created_at: new Date().toISOString() });
+    localStorage.setItem(LS_POSTS, JSON.stringify(arr));
+  }
+
+  setMsg("postMsg", "Aviso publicado.");
+  ["postTitle", "postContent", "postAuthor", "postImage"].forEach((id) => {
+    document.getElementById(id).value = "";
+  });
+  loadAdminData();
+}
+
+async function saveProject() {
+  const project = {
+    title: val("projectTitle"),
+    description: val("projectDescription"),
+    details: val("projectDetails"),
+    image_url: val("projectImage"),
+    status: val("projectStatus"),
+    voting_open: !!document.getElementById("projectVotingOpen")?.checked,
+  };
+
+  if (!project.title) {
+    return setMsg("projectMsg", "Preencha o título do projeto.");
+  }
+
+  const id = val("projectId");
+
+  if (sb()) {
+    const query = id
+      ? sb().from("projects").update(project).eq("id", id)
+      : sb().from("projects").insert(project);
+
+    const { error } = await query;
+    if (error) return setMsg("projectMsg", "Erro: " + error.message);
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_PROJECTS) || "[]");
+    if (id) arr = arr.map((p) => (String(p.id) === String(id) ? { ...p, ...project } : p));
+    else arr.push({ ...project, id: Date.now(), votes_count: 0 });
+    localStorage.setItem(LS_PROJECTS, JSON.stringify(arr));
+  }
+
+  setMsg("projectMsg", "Projeto salvo.");
+  clearProjectForm();
+  loadAdminData();
+}
+
+async function toggleVoting(id, open) {
+  if (sb()) {
+    await sb()
+      .from("projects")
+      .update({ voting_open: open, status: open ? "em_votacao" : "fechado" })
+      .eq("id", id);
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_PROJECTS) || "[]");
+    arr = arr.map((p) =>
+      String(p.id) === String(id)
+        ? { ...p, voting_open: open, status: open ? "em_votacao" : "fechado" }
+        : p
+    );
+    localStorage.setItem(LS_PROJECTS, JSON.stringify(arr));
+  }
+
+  loadAdminData();
+}
+
+async function deleteProject(id) {
+  if (!confirm("Excluir este projeto?")) return;
+
+  if (sb()) {
+    await sb().from("projects").delete().eq("id", id);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_PROJECTS) || "[]").filter(
+      (p) => String(p.id) !== String(id)
+    );
+    localStorage.setItem(LS_PROJECTS, JSON.stringify(arr));
+  }
+
+  loadAdminData();
+}
+
+function editProject(p) {
+  document.getElementById("projectId").value = p.id;
+  document.getElementById("projectTitle").value = p.title || "";
+  document.getElementById("projectDescription").value = p.description || "";
+  document.getElementById("projectDetails").value = p.details || "";
+  document.getElementById("projectImage").value = p.image_url || "";
+  document.getElementById("projectStatus").value = p.status || "em_votacao";
+  document.getElementById("projectVotingOpen").checked = !!p.voting_open;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function clearProjectForm() {
+  ["projectId", "projectTitle", "projectDescription", "projectDetails", "projectImage"].forEach(
+    (id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    }
+  );
+  const open = document.getElementById("projectVotingOpen");
+  if (open) open.checked = true;
+}
+
+
+function slugifyAdmin(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function projectVotingKeyAdmin(p) {
+  const titleSlug = slugifyAdmin(p?.title || p?.titulo || p?.id);
+  if (String(p?.project_key || "").trim()) return String(p.project_key);
+  if (titleSlug.includes("handbanner")) return "handbanner";
+  if (titleSlug.includes("ocean")) return "ocean-roxo";
+  if (titleSlug.includes("mensagem")) return "mensagem-final";
+  return String(p?.id || titleSlug || "projeto");
+}
+
+function simpleVoteSelectedKey() {
+  return val("simpleVoteProject") || "handbanner";
+}
+
+function renderSimpleProjectSelect(projects, votacoes, opcoes) {
+  const select = document.getElementById("simpleVoteProject");
+  if (!select) return;
+
+  const base = [
+    { key: "handbanner", label: "Handbanner" },
+    { key: "ocean-roxo", label: "Ocean Roxo" },
+    { key: "mensagem-final", label: "Mensagem Final" },
+  ];
+
+  const dynamic = (projects || []).map((p) => ({
+    key: projectVotingKeyAdmin(p),
+    label: p.title || p.titulo || "Projeto",
+  }));
+
+  const seen = new Set();
+  const items = [...base, ...dynamic].filter((item) => {
+    if (!item.key || seen.has(item.key)) return false;
+    seen.add(item.key);
+    return true;
+  });
+
+  const current = select.value;
+  select.innerHTML = items
+    .map((item) => `<option value="${escapeHtml(item.key)}">${escapeHtml(item.label)} — ${escapeHtml(item.key)}</option>`)
+    .join("");
+  if (current && items.some((i) => i.key === current)) select.value = current;
+
+  renderSimpleProjectOptions(votacoes || [], opcoes || []);
+}
+
+function currentSimpleVotacao(votacoes) {
+  const key = simpleVoteSelectedKey();
+  return (votacoes || []).find((v) => String(v.project_key || "") === String(key));
+}
+
+function renderSimpleProjectOptions(votacoes, opcoes) {
+  const list = document.getElementById("simpleProjectOptionsList");
+  if (!list) return;
+  const v = currentSimpleVotacao(votacoes);
+  const msg = document.getElementById("simpleVoteMsg");
+  if (!v) {
+    list.innerHTML = `<p>Salve a votação deste projeto antes de adicionar opções.</p>`;
+    return;
+  }
+  const rows = (opcoes || []).filter((o) => String(o.votacao_id) === String(v.id));
+  list.innerHTML = rows.length
+    ? rows.map((o) => `<article class="mini-admin-item">
+        <strong>${escapeHtml(o.titulo || "Opção")}</strong>
+        <p>${escapeHtml(o.descricao || "")}</p>
+        <small>${Number(o.votos_count || o.votos || 0).toLocaleString("pt-BR")} votos</small>
+        ${(o.imagem_url || o.imagem) && String(o.imagem_url || o.imagem).startsWith("http") ? `<img class="admin-thumb" src="${escapeHtml(o.imagem_url || o.imagem)}" alt="">` : ""}
+        <div class="admin-actions"><button class="btn small outline" onclick="deleteOpcao('${escapeHtml(o.id)}')">Excluir</button></div>
+      </article>`).join("")
+    : `<p>Nenhuma opção cadastrada neste projeto ainda.</p>`;
+}
+
+function manageProjectVoting(p) {
+  const key = projectVotingKeyAdmin(p);
+  showAdminTab("projects", document.querySelector("[onclick*=\"projects\"]"));
+  const select = document.getElementById("simpleVoteProject");
+  if (select) select.value = key;
+  const title = document.getElementById("simpleVoteTitle");
+  if (title && !title.value) title.value = `Votação - ${p.title || "Projeto"}`;
+  const desc = document.getElementById("simpleVoteDescription");
+  if (desc && !desc.value) desc.value = p.description || "Escolha sua opção favorita.";
+  loadSimpleProjectVoting();
+  document.querySelector(".voting-manager-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function loadSimpleProjectVoting() {
+  const key = simpleVoteSelectedKey();
+  const [votacoes, opcoes] = await Promise.all([getVotacoesAdmin(), getOpcoesAdmin()]);
+  const v = votacoes.find((item) => String(item.project_key || "") === String(key));
+  if (!v) {
+    setMsg("simpleVoteMsg", "Ainda não existe votação para este projeto. Preencha e clique em Salvar votação deste projeto.");
+    renderSimpleProjectOptions([], []);
+    return;
+  }
+  const title = document.getElementById("simpleVoteTitle");
+  const desc = document.getElementById("simpleVoteDescription");
+  const status = document.getElementById("simpleVoteStatus");
+  const phase = document.getElementById("simpleVotePhase");
+  const ranking = document.getElementById("simpleVoteRanking");
+  if (title) title.value = v.titulo || "";
+  if (desc) desc.value = v.descricao || "";
+  if (status) status.value = v.status || "aberta";
+  if (phase) phase.value = v.fase || "fase1";
+  if (ranking) ranking.checked = v.mostrar_ranking !== false;
+  setMsg("simpleVoteMsg", "Votação carregada para edição.");
+  renderSimpleProjectOptions(votacoes, opcoes);
+}
+
+async function saveSimpleProjectVoting() {
+  const key = simpleVoteSelectedKey();
+  const item = {
+    titulo: val("simpleVoteTitle") || `Votação - ${key}`,
+    descricao: val("simpleVoteDescription") || "Escolha sua opção favorita.",
+    fase: val("simpleVotePhase") || "fase1",
+    status: val("simpleVoteStatus") || "aberta",
+    mostrar_ranking: !!document.getElementById("simpleVoteRanking")?.checked,
+    project_key: key,
+  };
+
+  if (sb()) {
+    const { data: existing, error: findError } = await sb().from("votacoes").select("id").eq("project_key", key).limit(1);
+    if (findError) return setMsg("simpleVoteMsg", "Erro: " + findError.message);
+    const query = existing && existing.length
+      ? sb().from("votacoes").update(item).eq("id", existing[0].id).select().single()
+      : sb().from("votacoes").insert(item).select().single();
+    const { error } = await query;
+    if (error) return setMsg("simpleVoteMsg", "Erro: " + error.message + " — confira se rodou o SQL novo do ZIP.");
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_VOTACOES) || "[]");
+    const idx = arr.findIndex((v) => String(v.project_key || "") === String(key));
+    if (idx >= 0) arr[idx] = { ...arr[idx], ...item };
+    else arr.push({ ...item, id: Date.now(), created_at: new Date().toISOString() });
+    localStorage.setItem(LS_VOTACOES, JSON.stringify(arr));
+  }
+  setMsg("simpleVoteMsg", "Votação salva para este projeto.");
+  loadAdminData();
+}
+
+async function saveSimpleOption() {
+  const key = simpleVoteSelectedKey();
+  let votacoes = await getVotacoesAdmin();
+  let votacao = votacoes.find((v) => String(v.project_key || "") === String(key));
+  if (!votacao) {
+    await saveSimpleProjectVoting();
+    votacoes = await getVotacoesAdmin();
+    votacao = votacoes.find((v) => String(v.project_key || "") === String(key));
+  }
+  if (!votacao) return setMsg("simpleOptionMsg", "Crie/salve a votação deste projeto primeiro.");
+
+  const item = {
+    votacao_id: votacao.id,
+    titulo: val("simpleOptionTitle"),
+    imagem_url: val("simpleOptionImage"),
+    imagem: val("simpleOptionImage"),
+    descricao: val("simpleOptionDescription"),
+    votos_count: 0,
+    votos: 0,
+  };
+  if (!item.titulo) return setMsg("simpleOptionMsg", "Preencha o nome/frase da opção.");
+
+  if (sb()) {
+    const { error } = await sb().from("opcoes_votacao").insert(item);
+    if (error) return setMsg("simpleOptionMsg", "Erro: " + error.message);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_OPCOES) || "[]");
+    arr.push({ ...item, id: Date.now() + Math.random() });
+    localStorage.setItem(LS_OPCOES, JSON.stringify(arr));
+  }
+  ["simpleOptionTitle", "simpleOptionImage", "simpleOptionDescription"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  setMsg("simpleOptionMsg", "Opção adicionada ao projeto.");
+  loadAdminData();
+}
+
+async function saveVotacao() {
+  const item = {
+    titulo: val("votacaoTitulo"),
+    descricao: val("votacaoDescricao"),
+    fase: val("votacaoFase") || "fase1",
+    status: val("votacaoStatus") || "aberta",
+    mostrar_ranking: !!document.getElementById("votacaoMostrarRanking")?.checked,
+    project_key: (val("votacaoProjectKeyCustom") || val("votacaoProjectKey") || "handbanner").toLowerCase(),
+  };
+
+  if (!item.titulo) {
+    return setMsg("votacaoMsg", "Preencha o título da votação.");
+  }
+
+  const id = val("votacaoId");
+
+  if (sb()) {
+    const query = id
+      ? sb().from("votacoes").update(item).eq("id", id)
+      : sb().from("votacoes").insert(item);
+
+    const { error } = await query;
+    if (error) return setMsg("votacaoMsg", "Erro: " + error.message);
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_VOTACOES) || "[]");
+    if (id) arr = arr.map((v) => (String(v.id) === String(id) ? { ...v, ...item } : v));
+    else arr.push({ ...item, id: Date.now(), created_at: new Date().toISOString() });
+    localStorage.setItem(LS_VOTACOES, JSON.stringify(arr));
+  }
+
+  setMsg("votacaoMsg", "Votação salva.");
+  clearVotacaoForm();
+  loadAdminData();
+}
+
+function clearVotacaoForm() {
+  ["votacaoId", "votacaoTitulo", "votacaoDescricao", "votacaoProjectKeyCustom"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+}
+
+function editVotacao(v) {
+  document.getElementById("votacaoId").value = v.id;
+  document.getElementById("votacaoTitulo").value = v.titulo || "";
+  document.getElementById("votacaoDescricao").value = v.descricao || "";
+  document.getElementById("votacaoFase").value = v.fase || "fase1";
+  document.getElementById("votacaoStatus").value = v.status || "aberta";
+  document.getElementById("votacaoMostrarRanking").checked = v.mostrar_ranking !== false;
+  const knownKeys = ["handbanner", "ocean-roxo", "mensagem-final"];
+  const pk = v.project_key || "handbanner";
+  document.getElementById("votacaoProjectKey").value = knownKeys.includes(pk) ? pk : "outro";
+  document.getElementById("votacaoProjectKeyCustom").value = knownKeys.includes(pk) ? "" : pk;
+  showAdminTab("votacoes", document.querySelector("[onclick*=\"votacoes\"]"));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function deleteVotacao(id) {
+  if (!confirm("Excluir esta votação e todas as opções dela?")) return;
+
+  if (sb()) {
+    await sb().from("votacoes").delete().eq("id", id);
+  } else {
+    localStorage.setItem(
+      LS_VOTACOES,
+      JSON.stringify(
+        JSON.parse(localStorage.getItem(LS_VOTACOES) || "[]").filter(
+          (v) => String(v.id) !== String(id)
+        )
+      )
+    );
+    localStorage.setItem(
+      LS_OPCOES,
+      JSON.stringify(
+        JSON.parse(localStorage.getItem(LS_OPCOES) || "[]").filter(
+          (o) => String(o.votacao_id) !== String(id)
+        )
+      )
+    );
+  }
+
+  loadAdminData();
+}
+
+async function saveOpcaoVotacao() {
+  const item = {
+    votacao_id: val("opcaoVotacaoId"),
+    titulo: val("opcaoTitulo"),
+    imagem_url: val("opcaoImagem"),
+    descricao: val("opcaoDescricao"),
+  };
+
+  if (!item.votacao_id) return setMsg("opcaoMsg", "Crie/seleciona uma votação primeiro.");
+  if (!item.titulo) return setMsg("opcaoMsg", "Preencha o título/frase da opção.");
+
+  if (sb()) {
+    const { error } = await sb().from("opcoes_votacao").insert(item);
+    if (error) return setMsg("opcaoMsg", "Erro: " + error.message);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_OPCOES) || "[]");
+    arr.push({ ...item, id: Date.now() + Math.random(), votos_count: 0 });
+    localStorage.setItem(LS_OPCOES, JSON.stringify(arr));
+  }
+
+  setMsg("opcaoMsg", "Opção adicionada.");
+  ["opcaoTitulo", "opcaoImagem", "opcaoDescricao"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  loadAdminData();
+}
+
+async function saveOpcoesLote() {
+  const votacao_id = val("opcaoVotacaoId");
+  const raw = val("opcoesLote");
+
+  if (!votacao_id) return setMsg("opcaoMsg", "Selecione uma votação primeiro.");
+  if (!raw) return setMsg("opcaoMsg", "Cole as opções no campo em lote.");
+
+  const rows = raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [titulo, imagem_url, descricao] = line.split("|").map((p) => p?.trim() || "");
+      return { votacao_id, titulo, imagem_url, imagem: imagem_url, descricao, votos_count: 0, votos: 0 };
+    })
+    .filter((r) => r.titulo);
+
+  if (!rows.length) return setMsg("opcaoMsg", "Nenhuma opção válida encontrada.");
+
+  if (sb()) {
+    const { error } = await sb().from("opcoes_votacao").insert(rows);
+    if (error) return setMsg("opcaoMsg", "Erro: " + error.message);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_OPCOES) || "[]");
+    rows.forEach((r, i) => arr.push({ ...r, id: Date.now() + i, votos_count: 0 }));
+    localStorage.setItem(LS_OPCOES, JSON.stringify(arr));
+  }
+
+  document.getElementById("opcoesLote").value = "";
+  setMsg("opcaoMsg", rows.length + " opções adicionadas.");
+  loadAdminData();
+}
+
+
+async function uploadHandbannerFiles() {
+  const votacao_id = val("opcaoVotacaoId");
+  const fileInput = document.getElementById("handbannerFiles");
+  const titleBox = document.getElementById("handbannerTitles");
+  const files = Array.from(fileInput?.files || []);
+  const titles = (titleBox?.value || "")
+    .split("\n")
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  if (!sb()) return setMsg("uploadMsg", "Supabase não conectado.");
+  if (!votacao_id) return setMsg("uploadMsg", "Selecione uma votação primeiro.");
+  if (!files.length) return setMsg("uploadMsg", "Selecione as imagens.");
+
+  setMsg("uploadMsg", `Enviando ${files.length} imagem(ns)...`);
+
+  const rows = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const safeName = file.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "-")
+      .toLowerCase();
+
+    const ext = safeName.includes(".") ? safeName.split(".").pop() : "jpg";
+    const path = `${votacao_id}/${Date.now()}-${i + 1}-${safeName || "handbanner." + ext}`;
+
+    const { error: uploadError } = await sb()
+      .storage
+      .from("handbanners")
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error(uploadError);
+      setMsg("uploadMsg", `Erro ao enviar ${file.name}: ${uploadError.message}`);
+      return;
+    }
+
+    const { data: publicData } = sb()
+      .storage
+      .from("handbanners")
+      .getPublicUrl(path);
+
+    rows.push({
+      votacao_id,
+      titulo: titles[i] || file.name.replace(/\.[^/.]+$/, ""),
+      imagem_url: publicData.publicUrl,
+      imagem: publicData.publicUrl,
+      descricao: "",
+      votos_count: 0,
+      votos: 0
+    });
+
+    setMsg("uploadMsg", `Enviadas ${i + 1}/${files.length} imagem(ns)...`);
+  }
+
+  const { error } = await sb().from("opcoes_votacao").insert(rows);
+
+  if (error) {
+    console.error(error);
+    return setMsg("uploadMsg", "Imagens enviadas, mas erro ao cadastrar opções: " + error.message);
+  }
+
+  fileInput.value = "";
+  if (titleBox) titleBox.value = "";
+
+  setMsg("uploadMsg", `${rows.length} handbanner(s) enviados e cadastrados.`);
+  loadAdminData();
+}
+
+
+async function deleteOpcao(id) {
+  if (!confirm("Excluir esta opção?")) return;
+
+  if (sb()) {
+    await sb().from("opcoes_votacao").delete().eq("id", id);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_OPCOES) || "[]").filter(
+      (o) => String(o.id) !== String(id)
+    );
+    localStorage.setItem(LS_OPCOES, JSON.stringify(arr));
+  }
+
+  loadAdminData();
+}
+
+
+async function saveHelpItem() {
+  const item = {
+    section_key: val("helpSection") || "outros",
+    title: val("helpTitle"),
+    content: val("helpContent"),
+    image_url: val("helpImage"),
+    extra_images: val("helpExtraImages"),
+    link_url: val("helpLinkUrl"),
+    link_label: val("helpLinkLabel"),
+    position: Number(val("helpPosition") || 0),
+  };
+
+  if (!item.title) return setMsg("helpMsg", "Preencha pelo menos o título do bloco.");
+  const id = val("helpId");
+
+  if (sb()) {
+    const query = id
+      ? sb().from("help_items").update(item).eq("id", id)
+      : sb().from("help_items").insert(item);
+    const { error } = await query;
+    if (error) return setMsg("helpMsg", "Erro: " + error.message);
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_HELP) || "[]");
+    if (id) arr = arr.map((h) => String(h.id) === String(id) ? { ...h, ...item } : h);
+    else arr.push({ ...item, id: Date.now(), created_at: new Date().toISOString() });
+    localStorage.setItem(LS_HELP, JSON.stringify(arr));
+  }
+
+  setMsg("helpMsg", "Bloco do BARMY Ajuda salvo.");
+  clearHelpForm();
+  loadAdminData();
+}
+
+function editHelpItem(h) {
+  document.getElementById("helpId").value = h.id || "";
+  document.getElementById("helpTitle").value = h.title || "";
+  document.getElementById("helpContent").value = h.content || "";
+  document.getElementById("helpImage").value = h.image_url || h.image || "";
+  document.getElementById("helpExtraImages").value = h.extra_images || h.extra_image_urls || h.gallery_images || "";
+  document.getElementById("helpLinkUrl").value = h.link_url || "";
+  document.getElementById("helpLinkLabel").value = h.link_label || "";
+  document.getElementById("helpSection").value = h.section_key || "outros";
+  document.getElementById("helpPosition").value = h.position || 0;
+  showAdminTab("ajuda", document.querySelector("[onclick*=\"ajuda\"]"));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function clearHelpForm() {
+  ["helpId", "helpTitle", "helpContent", "helpImage", "helpExtraImages", "helpLinkUrl", "helpLinkLabel", "helpPosition"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  const section = document.getElementById("helpSection");
+  if (section) section.value = "mapa";
+}
+
+async function deleteHelpItem(id) {
+  if (!confirm("Excluir este bloco do BARMY Ajuda?")) return;
+
+  if (sb()) {
+    const { error } = await sb().from("help_items").delete().eq("id", id);
+    if (error) return alert("Erro: " + error.message);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_HELP) || "[]").filter((h) => String(h.id) !== String(id));
+    localStorage.setItem(LS_HELP, JSON.stringify(arr));
+  }
+  loadAdminData();
+}
+
+async function getHelpAdmin() {
+  if (sb()) {
+    const { data } = await sb().from("help_items").select("*").order("position", { ascending: true }).order("created_at", { ascending: true });
+    return data || [];
+  }
+  return JSON.parse(localStorage.getItem(LS_HELP) || "[]").sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
+}
+
+
+async function saveStreamItem() {
+  const item = {
+    section_key: val("streamSection") || "outros",
+    title: val("streamTitle"),
+    description: val("streamDescription"),
+    content: val("streamContent"),
+    image_url: val("streamImage"),
+    link_url: val("streamLinkUrl"),
+    link_label: val("streamLinkLabel"),
+    position: Number(val("streamPosition") || 0),
+  };
+
+  if (!item.title) return setMsg("streamMsg", "Preencha pelo menos o título do bloco.");
+  const id = val("streamId");
+
+  if (sb()) {
+    const query = id
+      ? sb().from("stream_items").update(item).eq("id", id)
+      : sb().from("stream_items").insert(item);
+    const { error } = await query;
+    if (error) return setMsg("streamMsg", "Erro: " + error.message);
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_STREAM) || "[]");
+    if (id) arr = arr.map((h) => String(h.id) === String(id) ? { ...h, ...item } : h);
+    else arr.push({ ...item, id: Date.now(), created_at: new Date().toISOString() });
+    localStorage.setItem(LS_STREAM, JSON.stringify(arr));
+  }
+
+  setMsg("streamMsg", "Bloco do Stream salvo.");
+  clearStreamForm();
+  loadAdminData();
+}
+
+function editStreamItem(h) {
+  document.getElementById("streamId").value = h.id || "";
+  document.getElementById("streamTitle").value = h.title || "";
+  document.getElementById("streamDescription").value = h.description || "";
+  document.getElementById("streamContent").value = h.content || "";
+  document.getElementById("streamImage").value = h.image_url || h.image || "";
+  document.getElementById("streamLinkUrl").value = h.link_url || "";
+  document.getElementById("streamLinkLabel").value = h.link_label || "";
+  document.getElementById("streamSection").value = h.section_key || "outros";
+  document.getElementById("streamPosition").value = h.position || 0;
+  showAdminTab("stream", document.querySelector("[onclick*=\"stream\"]"));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function clearStreamForm() {
+  ["streamId", "streamTitle", "streamDescription", "streamContent", "streamImage", "streamLinkUrl", "streamLinkLabel", "streamPosition"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  const section = document.getElementById("streamSection");
+  if (section) section.value = "playlists";
+}
+
+async function deleteStreamItem(id) {
+  if (!confirm("Excluir este bloco do Stream?")) return;
+
+  if (sb()) {
+    const { error } = await sb().from("stream_items").delete().eq("id", id);
+    if (error) return alert("Erro: " + error.message);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_STREAM) || "[]").filter((h) => String(h.id) !== String(id));
+    localStorage.setItem(LS_STREAM, JSON.stringify(arr));
+  }
+  loadAdminData();
+}
+
+async function getStreamAdmin() {
+  if (sb()) {
+    const { data } = await sb().from("stream_items").select("*").order("position", { ascending: true }).order("created_at", { ascending: true });
+    return data || [];
+  }
+  return JSON.parse(localStorage.getItem(LS_STREAM) || "[]").sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
+}
+
+async function saveSiteSettings() {
+  const s = {
+    hero_title: val("siteHeroTitle"),
+    hero_text: val("siteHeroText"),
+    hero_image: val("siteHeroImage"),
+    contact_email: val("siteContactEmail"),
+  };
+
+  localStorage.setItem(LS_SITE, JSON.stringify(s));
+
+  if (sb()) {
+    await sb().from("site_settings").upsert({ id: 1, ...s });
+  }
+
+  setMsg("siteMsg", "Alterações salvas.");
+}
+
+async function getPostsAdmin() {
+  if (sb()) {
+    const { data } = await sb()
+      .from("community_posts")
+      .select("*")
+      .order("created_at", { ascending: false });
+    return data || [];
+  }
+
+  return JSON.parse(localStorage.getItem(LS_POSTS) || "[]").reverse();
+}
+
+async function getProjectsAdmin() {
+  if (sb()) {
+    const { data } = await sb()
+      .from("projects")
+      .select("*")
+      .order("created_at", { ascending: false });
+    return data || [];
+  }
+
+  return JSON.parse(localStorage.getItem(LS_PROJECTS) || "[]");
+}
+
+async function getVotacoesAdmin() {
+  if (sb()) {
+    const { data } = await sb()
+      .from("votacoes")
+      .select("*")
+      .order("created_at", { ascending: false });
+    return data || [];
+  }
+
+  return JSON.parse(localStorage.getItem(LS_VOTACOES) || "[]");
+}
+
+async function getOpcoesAdmin() {
+  if (sb()) {
+    const { data } = await sb()
+      .from("opcoes_votacao")
+      .select("*")
+      .order("votos_count", { ascending: false });
+    return data || [];
+  }
+
+  return JSON.parse(localStorage.getItem(LS_OPCOES) || "[]");
+}
+
+function renderVotacaoSelect(votacoes) {
+  const select = document.getElementById("opcaoVotacaoId");
+  if (!select) return;
+
+  select.innerHTML = votacoes.length
+    ? votacoes
+        .map((v) => `<option value="${v.id}">${escapeHtml(v.titulo)} — ${escapeHtml(v.fase || "")}</option>`)
+        .join("")
+    : `<option value="">Crie uma votação primeiro</option>`;
+}
+
+
+let cachedPhrases = [];
+async function loadPhraseSubmissions() {
+  const list = document.getElementById("adminPhraseList");
+  if (!list) return;
+  let rows = [];
+  if (sb()) {
+    const { data, error } = await sb().from("phrase_submissions").select("*").order("created_at", { ascending: false }).limit(5000);
+    if (error) {
+      list.innerHTML = `<div class="admin-item"><strong>Erro</strong><p>${escapeHtml(error.message)}</p></div>`;
+      return;
+    }
+    rows = data || [];
+  } else {
+    rows = JSON.parse(localStorage.getItem(LS_PHRASES) || "[]").reverse();
+  }
+  cachedPhrases = rows;
+  document.getElementById("phraseMsg") && (document.getElementById("phraseMsg").textContent = rows.length + " frase(s) carregada(s).");
+  list.innerHTML = rows.length ? rows.map((r) => `<div class="admin-item">
+    <strong>${escapeHtml(r.phrase || "Frase")}</strong>
+    <p>${escapeHtml(r.author_name || "Sem nome")} ${r.social_handle ? "• " + escapeHtml(r.social_handle) : ""}</p>
+    <small>${escapeHtml(new Date(r.created_at || Date.now()).toLocaleString("pt-BR"))}</small>
+  </div>`).join("") : `<div class="admin-item"><strong>Nenhuma frase enviada ainda.</strong><p>Quando o formulário público for usado, as frases aparecem aqui.</p></div>`;
+}
+function downloadPhrasesCsv() {
+  const rows = cachedPhrases || [];
+  const header = ["frase", "nome", "arroba", "data"];
+  const csv = [header.join(";")].concat(rows.map((r) => [r.phrase, r.author_name, r.social_handle, r.created_at].map((v) => `"${String(v || "").replace(/"/g, '""')}"`).join(";"))).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "frases-handbanner-barmy360.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function loadAdminData() {
+  const [posts, projects, votacoes, opcoes, helpItems, streamItems] = await Promise.all([
+    getPostsAdmin(),
+    getProjectsAdmin(),
+    getVotacoesAdmin(),
+    getOpcoesAdmin(),
+    getHelpAdmin(),
+    getStreamAdmin(),
+  ]);
+
+  const postsList = document.getElementById("adminPostsList");
+  if (postsList) {
+    postsList.innerHTML = posts.length
+      ? posts
+          .map(
+            (p) =>
+              `<article class="mini-admin-item"><strong>${escapeHtml(p.title)}</strong>${p.image_url ? `<img class="admin-thumb" src="${escapeHtml(p.image_url)}" alt="">` : ""}<p>${escapeHtml(
+                p.content
+              )}</p><small>${escapeHtml(p.author || "ADM")}</small></article>`
+          )
+          .join("")
+      : "<p>Nenhum aviso publicado.</p>";
+  }
+
+  const projectsList = document.getElementById("adminProjectsList");
+  if (projectsList) {
+    projectsList.innerHTML = projects.length
+      ? projects
+          .map(
+            (p) => `<article class="mini-admin-item">
+              <strong>${escapeHtml(p.title)}</strong>
+              <p>${escapeHtml(p.description || "")}</p>
+              <small>${Number(p.votes_count || 0).toLocaleString("pt-BR")} votos • ${
+              p.voting_open ? "aberto" : "fechado"
+            }</small>
+              <div class="admin-actions">
+                <button class="btn small outline" onclick='editProject(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar projeto</button>
+                <button class="btn small primary" onclick='manageProjectVoting(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Gerenciar votação</button>
+                <button class="btn small outline" onclick="toggleVoting('${p.id}', ${!p.voting_open})">${
+              p.voting_open ? "Fechar" : "Abrir"
+            }</button>
+                <button class="btn small outline" onclick="deleteProject('${p.id}')">Excluir</button>
+              </div>
+            </article>`
+          )
+          .join("")
+      : "<p>Nenhum projeto cadastrado ainda.</p>";
+  }
+
+  renderVotacaoSelect(votacoes);
+  renderSimpleProjectSelect(projects, votacoes, opcoes);
+
+  const votacoesList = document.getElementById("adminVotacoesList");
+  if (votacoesList) {
+    votacoesList.innerHTML = votacoes.length
+      ? votacoes
+          .map((v) => {
+            const total = opcoes.filter((o) => String(o.votacao_id) === String(v.id)).length;
+            return `<article class="mini-admin-item">
+              <strong>${escapeHtml(v.titulo)}</strong>
+              <p>${escapeHtml(v.descricao || "")}</p>
+              <small>${escapeHtml(v.fase || "")} • ${escapeHtml(v.status || "")} • ${total} opções</small>
+              <div class="admin-actions">
+                <button class="btn small outline" onclick='editVotacao(${JSON.stringify(v).replace(/'/g, "&#39;")})'>Editar</button>
+                <button class="btn small outline" onclick="deleteVotacao('${v.id}')">Excluir</button>
+              </div>
+            </article>`;
+          })
+          .join("")
+      : "<p>Nenhuma votação criada. Crie a votação Handbanner - Fase 1 aqui.</p>";
+  }
+
+  const opcoesList = document.getElementById("adminOpcoesList");
+  if (opcoesList) {
+    opcoesList.innerHTML = opcoes.length
+      ? opcoes
+          .map(
+            (o) => `<article class="mini-admin-item">
+              <strong>${escapeHtml(o.titulo)}</strong>
+              <p>${escapeHtml(o.descricao || "")}</p>
+              <small>${Number(o.votos_count || o.votos || 0).toLocaleString("pt-BR")} votos</small>${(o.imagem_url || o.imagem) ? `<img class="admin-thumb" src="${escapeHtml(o.imagem_url || o.imagem)}" alt="">` : ""}
+              <div class="admin-actions">
+                <button class="btn small outline" onclick="deleteOpcao('${o.id}')">Excluir</button>
+              </div>
+            </article>`
+          )
+          .join("")
+      : "<p>Nenhuma opção cadastrada ainda.</p>";
+  }
+
+  const helpList = document.getElementById("adminHelpList");
+  if (helpList) {
+    helpList.innerHTML = helpItems.length
+      ? helpItems.map((h) => `<article class="mini-admin-item">
+          <strong>${escapeHtml(h.title)}</strong>
+          <p>${escapeHtml(h.content || "")}</p>${(h.extra_images || h.extra_image_urls || h.gallery_images) ? `<small>📸 Fotos adicionais cadastradas</small>` : ""}
+          <small>${escapeHtml(h.section_key || "outros")} • ordem ${Number(h.position || 0)}</small>
+          ${(h.image_url || h.image) && String(h.image_url || h.image).startsWith("http") ? `<img class="admin-thumb" src="${escapeHtml(h.image_url || h.image)}" alt="">` : ""}
+          <div class="admin-actions">
+            <button class="btn small outline" onclick='editHelpItem(${JSON.stringify(h).replace(/'/g, "&#39;")})'>Editar</button>
+            <button class="btn small outline" onclick="deleteHelpItem('${h.id}')">Excluir</button>
+          </div>
+        </article>`).join("")
+      : "<p>Nenhum bloco cadastrado. Salve os blocos do BARMY Ajuda aqui.</p>";
+  }
+  const streamList = document.getElementById("adminStreamList");
+  if (streamList) streamList.innerHTML = streamItems.length ? streamItems.map((h) => `<article class="mini-admin-item"><strong>${escapeHtml(h.title)}</strong><p>${escapeHtml(h.description || h.content || "")}</p><div class="admin-actions"><button class="btn small outline" onclick='editStreamItem(${JSON.stringify(h).replace(/'/g, "&#39;")})'>Editar</button><button class="btn small outline" onclick="deleteStreamItem('${h.id}')">Excluir</button></div></article>`).join("") : "<p>Nenhum bloco cadastrado. Salve os blocos de Stream aqui.</p>";
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("simpleVoteProject")?.addEventListener("change", loadSimpleProjectVoting);
+  if (!sb()) return;
+
+  const { data } = await sb().auth.getSession();
+  if (data?.session) {
+    document.getElementById("loginArea")?.classList.add("hidden");
+    document.getElementById("dashboardArea")?.classList.remove("hidden");
+    loadAdminData();
+  }
+});
