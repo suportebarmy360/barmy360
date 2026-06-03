@@ -311,3 +311,53 @@ input[type="file"]{border-style:dashed;background:rgba(255,255,255,.035)}
   text-decoration: line-through;
   opacity: 0.75;
 }
+@media (max-width: 760px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .page,
+  .section,
+  .container,
+  main {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .glow-card,
+  .admin-card,
+  .project-card,
+  .detail-card,
+  .detail-hero,
+  .help-detail {
+    width: auto !important;
+    max-width: calc(100vw - 32px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .detail-hero img,
+  .help-detail img,
+  .glow-card img {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: cover;
+    display: block;
+  }
+
+  .detail-hero,
+  .help-detail {
+    grid-template-columns: 1fr !important;
+  }
+
+  .detail-hero .btn,
+  .help-detail .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
