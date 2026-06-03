@@ -7,6 +7,8 @@ const LS_STREAM = "barmy360_stream_items";
 const LS_VOTACOES = "barmy360_votacoes";
 const LS_OPCOES = "barmy360_opcoes_votacao";
 
+// Projetos não ficam mais fixos no código.
+// Eles precisam vir do Supabase/painel ADM para poder editar, apagar e restaurar corretamente.
 const defaultProjects = [];
 
 function fallbackPosts() {
@@ -493,10 +495,10 @@ async function loadHelpPage() {
     <h3>O que é permitido levar na mochila</h3>
     <ul class="pretty-list">
       <li>Documento com foto.</li>
-      <li>Powerbank (pequeno até 500g)</li>
-      <li>Capa de chuva.</li>
-      <li>Água (em garrafa plástica transparente, sem tampa e até 600ml).</li>
-      <li>Lanches lacrados (industrializados e pequenas porções).</li>
+      <li>Powerbank, se permitido pela organização.</li>
+      <li>Água e alimentos apenas se as regras oficiais permitirem.</li>
+      <li>Itens pequenos e seguros.</li>
+      <li>Conferir sempre as regras oficiais do evento antes do show.</li>
     </ul>
   </article>`;
 }

@@ -284,20 +284,19 @@ input[type="file"]{border-style:dashed;background:rgba(255,255,255,.035)}
 .launch-brand-old strong{display:block;font-weight:900;letter-spacing:.07em}.launch-brand-old span{display:block;font-size:.68rem;color:var(--muted);letter-spacing:.16em;text-transform:uppercase}.launch-b-symbol{width:38px;height:38px;font-size:1rem}.compact-launch-card h1{font-size:clamp(1.9rem,5.6vw,3.7rem);line-height:1;margin:14px 0;letter-spacing:-.04em}.compact-launch-card .launch-text{font-size:1rem;max-width:520px;margin:0 auto 22px;color:var(--muted);line-height:1.65}.compact-count-grid{grid-template-columns:repeat(4,1fr);gap:10px;margin:22px auto;max-width:500px}.compact-count-grid div{border-radius:20px;padding:14px 8px;background:#151515;border:1px solid rgba(127,76,165,.28);box-shadow:0 0 20px rgba(127,76,165,.16)}.compact-count-grid strong{font-size:clamp(1.7rem,4.8vw,3rem);line-height:1}.compact-count-grid span{font-size:.66rem;margin-top:6px}.compact-launch-card .launch-note{font-size:.9rem;color:var(--muted)}
 @media(max-width:560px){.compact-count-grid{grid-template-columns:repeat(2,1fr)}.launch-brand-old{border-radius:24px}.compact-launch-card{padding:26px 18px}}
 
-/* === CORRECAO MOBILE FINAL - BARMY360 === */
+/* ===== BARMY360 MOBILE FINAL FIX - 2026-06-03 ===== */
 @media (max-width: 760px) {
-  *, *::before, *::after {
-    box-sizing: border-box !important;
-  }
-
   html,
   body {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
-  body > *,
+  body * {
+    box-sizing: border-box;
+  }
+
   main,
   .page,
   .section,
@@ -307,71 +306,74 @@ input[type="file"]{border-style:dashed;background:rgba(255,255,255,.035)}
   .feature-grid,
   .project-grid,
   .posts-list,
-  .community-layout {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-    overflow-x: hidden !important;
+  .community-layout,
+  .two-grid,
+  .mini-count-grid,
+  .check-grid,
+  .help-gallery-grid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
-  .project-detail-hero,
-  .section.page {
-    padding-top: 42px !important;
-    padding-bottom: 42px !important;
+  .section,
+  .page,
+  .project-detail-hero {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
 
   .project-detail-card,
-  .project-detail-card.glow-card,
-  .support-card,
-  .support-card.glow-card,
+  .project-access-card,
+  .protection-alert,
   .feature-card,
-  .feature-card.glow-card,
   .project-card,
-  .project-card.glow-card,
-  .post-card,
-  .post-card.glow-card,
-  .community-panel,
-  .community-panel.glow-card,
+  .support-card,
   .detail-box,
-  .detail-box.glow-card,
   .admin-card,
-  .admin-card.glow-card,
+  .community-panel,
+  .post-card,
+  .mini-count,
+  .suggestion-card,
+  .denuncia-card,
+  .monitor-box,
   .voting-campaign,
-  .option-card,
-  .voting-option-card {
+  .gate-card,
+  .home-about-card,
+  .launch-card,
+  .compact-launch-card {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    padding: 22px !important;
     overflow: hidden !important;
   }
 
   .project-detail-card,
-  .project-detail-card.glow-card {
-    display: flex !important;
-    flex-direction: column !important;
-    grid-template-columns: none !important;
-    gap: 22px !important;
+  .home-about-card,
+  .project-access-card,
+  .protection-alert,
+  .suggestion-card,
+  .denuncia-card,
+  .monitor-box {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
   }
 
   .project-detail-card > *,
-  .support-card > *,
+  .project-access-card > *,
+  .protection-alert > *,
   .feature-card > *,
   .project-card > *,
-  .post-card > *,
-  .community-panel > *,
+  .support-card > *,
   .detail-box > *,
   .admin-card > *,
-  .voting-campaign > *,
-  .option-card > *,
-  .voting-option-card > * {
-    width: 100% !important;
+  .community-panel > *,
+  .post-card > *,
+  .home-about-card > *,
+  .voting-campaign > * {
     max-width: 100% !important;
     min-width: 0 !important;
   }
@@ -380,65 +382,60 @@ input[type="file"]{border-style:dashed;background:rgba(255,255,255,.035)}
   .project-image,
   .image-placeholder,
   .home-about-image,
-  .option-image,
   .post-image,
   .help-gallery-image,
-  img,
-  video,
-  iframe {
+  .ad-placeholder {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    height: auto !important;
-    min-height: 0 !important;
     aspect-ratio: 16 / 9 !important;
-    object-fit: cover !important;
-    display: block !important;
-  }
-
-  .project-detail-image,
-  .project-image,
-  .image-placeholder {
-    padding: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
     overflow: hidden !important;
   }
 
-  .project-detail-info,
-  .project-detail-meta,
-  .project-actions,
-  .hero-actions,
-  .social-row,
-  .vote-line {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    flex-wrap: wrap !important;
+  .handbanner-ratio {
+    aspect-ratio: 3 / 1 !important;
   }
 
-  h1,
-  h2,
-  h3,
-  p,
-  li,
-  span,
-  a,
-  strong,
-  small,
-  .kicker,
-  .status,
-  .meta-pill {
+  img,
+  video,
+  iframe,
+  .option-image,
+  .image-cover img {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    object-fit: cover !important;
+  }
+
+  .project-detail-info,
+  .project-detail-info *,
+  .section-heading,
+  .section-heading *,
+  .feature-card *,
+  .project-card *,
+  .support-card *,
+  .detail-box *,
+  .admin-card *,
+  .community-panel *,
+  .post-card *,
+  .home-about-text *,
+  .voting-campaign * {
     max-width: 100% !important;
     min-width: 0 !important;
     overflow-wrap: anywhere !important;
-    word-break: normal !important;
   }
 
-  .project-detail-info h1,
-  .project-detail-card h1,
-  .section-heading h1 {
-    font-size: clamp(1.9rem, 8vw, 2.6rem) !important;
-    line-height: 1.08 !important;
-    letter-spacing: -0.03em !important;
+  h1 {
+    font-size: clamp(2rem, 10vw, 3rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  h2 {
+    font-size: clamp(1.45rem, 7vw, 2.1rem) !important;
+    line-height: 1.12 !important;
   }
 
   .btn,
@@ -448,6 +445,25 @@ input[type="file"]{border-style:dashed;background:rgba(255,255,255,.035)}
   select {
     max-width: 100% !important;
     white-space: normal !important;
-    text-align: center !important;
+  }
+
+  .hero-actions,
+  .project-actions,
+  .social-row {
+    width: 100% !important;
+  }
+
+  .hero-actions .btn,
+  .project-detail-info .btn,
+  .project-access-card .btn,
+  .protection-alert .btn {
+    width: 100% !important;
+  }
+
+  .menu-list {
+    right: 16px !important;
+    left: 16px !important;
+    min-width: 0 !important;
+    width: auto !important;
   }
 }

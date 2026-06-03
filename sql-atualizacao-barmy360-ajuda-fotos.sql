@@ -1,4 +1,5 @@
-nel/site.
+-- Atualização segura para esta versão do BARMY360
+-- Não apaga dados. Apenas garante campos usados pelo painel/site.
 
 alter table if exists public.help_items
 add column if not exists extra_images text;
