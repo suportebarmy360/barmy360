@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BARMY360 • Projetos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script defer src="assets/js/config.js"></script>
+<script defer src="assets/js/main.js"></script>
+<script defer src="assets/js/voting-page.js"></script>
+<script defer src="assets/js/public-data.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html" class="brand">
+    <div class="brand-symbol">B</div>
+    <div>
+      <strong>BARMY360</strong>
+      <span>ARMY BRASIL</span>
+    </div>
+  </a>
+
+  <details class="menu">
+    <summary>☰ Menu</summary>
+    <nav class="menu-list">
+      <a href="index.html">Início</a>
+      <a href="projetos.html">Projetos</a>
+      <a href="ajuda.html">BARMY Ajuda</a>
+      
+      <a href="stream.html">Stream</a>
+      <a href="comunidade.html">Comunidade</a>
+      <a href="apoie.html">Apoie</a>
+    </nav>
+  </details>
+</header>
+
+
+<main>
+  <section id="projectGate" class="gate-section">
+    <div class="gate-card glow-card">
+      <div class="emoji large">🔒</div>
+      <p class="kicker">PROJETOS</p>
+      <h1>Projetos BTS no Brasil</h1>
+      <p>Essa página é protegida para projetos sensíveis do fandom. Responda a pergunta para acessar.</p>
+      <label for="projectPassword">Pergunta: qual doce brasileiro de festa é feito com leite condensado, chocolate e granulado?</label>
+      <input id="projectPassword" type="text" placeholder="Digite a resposta">
+      <button class="btn primary" onclick="unlockProjects()">Entrar na área protegida</button>
+      <p id="projectError" class="error"></p>
+    </div>
+  </section>
+
+  <section id="projectContent" class="section hidden">
+    <div class="protection-alert glow-card">
+      <div>
+        <p class="kicker">ÁREA PROTEGIDA</p>
+        <h1>Projetos do fandom</h1>
+        <p>Não compartilhe prints, links internos, detalhes dos projetos ou informações sensíveis fora da comunidade.</p>
+      </div>
+      <button class="btn outline" onclick="lockProjects()">Sair da área protegida</button>
+    </div>
+
+    <div class="section-heading">
+      <p class="kicker">CAMPANHAS E PROJETOS</p>
+      <h2>Projetos em andamento</h2>
+      <p>Escolha um projeto para ver explicação, dinâmica, avisos e, quando houver, opções de votação.</p>
+    </div>
+
+    <div class="project-grid campaign-grid" id="campaignGrid">
+      <div id="dynamicProjectsGrid" class="dynamic-projects-inline"></div>
+    </div>
+
+    <article class="suggestion-card glow-card">
+      <div>
+        <div class="emoji">💡</div>
+        <h2>Tem uma sugestão de projeto?</h2>
+        <p>Envie uma ideia para análise dos ADMs e organização da comunidade.</p>
+      </div>
+      <a class="btn primary" href="mailto:contato@barmy360.com">Enviar sugestão</a>
+    </article>
+  </section>
+</main>
+
+
+<footer class="footer">
+  <strong>BARMY360</strong>
+  <span>Feito pelo fandom, para o fandom 💜</span>
+</footer>
+
+</body>
+</html>
