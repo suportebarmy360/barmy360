@@ -7,18 +7,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=20260604-v3">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script defer src="assets/js/config.js"></script>
 <script defer src="assets/js/main.js"></script>
 <script defer src="assets/js/voting-page.js"></script>
 <script defer src="assets/js/public-data.js"></script>
+<script defer src="assets/js/launch-guard.js?v=20260604-v3"></script>
 </head>
 <body>
 
 <header class="topbar">
   <a href="index.html" class="brand">
-    <div class="brand-symbol">B</div>
+    <img class="brand-logo-iso" src="assets/images/b360-iso.png" alt="B360">
     <div>
       <strong>BARMY360</strong>
       <span>ARMY BRASIL</span>
@@ -34,6 +35,7 @@
       
       <a href="stream.html">Stream</a>
       <a href="comunidade.html">Comunidade</a>
+      <a href="cronogramas.html">Docs/Cronogramas</a>
       <a href="apoie.html">Apoie</a>
     </nav>
   </details>
@@ -46,7 +48,7 @@
       <div class="emoji large">🔒</div>
       <p class="kicker">PROJETOS</p>
       <h1>Projetos BTS no Brasil</h1>
-      <p>Essa página é protegida para projetos sensíveis do fandom. Responda a pergunta para acessar.</p>
+      <p>Essa página é protegida para projetos do fandom. Responda a pergunta para acessar.</p>
       <label for="projectPassword">Pergunta: qual doce brasileiro de festa é feito com leite condensado, chocolate e granulado?</label>
       <input id="projectPassword" type="text" placeholder="Digite a resposta">
       <button class="btn primary" onclick="unlockProjects()">Entrar na área protegida</button>
@@ -67,11 +69,29 @@
     <div class="section-heading">
       <p class="kicker">CAMPANHAS E PROJETOS</p>
       <h2>Projetos em andamento</h2>
-      <p>Escolha um projeto para ver explicação, dinâmica, avisos e, quando houver, opções de votação.</p>
+      <p>Veja os projetos ativos e participe das votações.</p>
     </div>
 
     <div class="project-grid campaign-grid" id="campaignGrid">
       <div id="dynamicProjectsGrid" class="dynamic-projects-inline"></div>
+    </div>
+
+
+    <div class="project-grid fixed-projects-grid">
+      <article class="project-card glow-card fixed-info-card">
+        <div class="project-image"><img src="assets/images/docstermo.png.png" alt="Documentos para votação"></div>
+        <span class="status analysis">DOCUMENTOS</span>
+        <h3>Documentos para votação</h3>
+        <p>Leia os termos, editais e documentos oficiais antes de participar das votações.</p>
+        <a class="btn small primary" href="documento-votacao.html">Abrir documentos</a>
+      </article>
+      <article class="project-card glow-card fixed-info-card">
+        <div class="project-image"><img src="assets/images/projetosolos.png" alt="Projetos Solos"></div>
+        <span class="status planning">EM BREVE</span>
+        <h3>Projetos Solos</h3>
+        <p>Área para organizar cards por membro. Conteúdo em breve.</p>
+        <a class="btn small outline" href="projetos-solos.html">Ver membros</a>
+      </article>
     </div>
 
     <article class="suggestion-card glow-card">
@@ -80,7 +100,7 @@
         <h2>Tem uma sugestão de projeto?</h2>
         <p>Envie uma ideia para análise dos ADMs e organização da comunidade.</p>
       </div>
-      <a class="btn primary" href="mailto:contato@barmy360.com">Enviar sugestão</a>
+      <a class="btn primary" href="mailto:Projeto.barmy@gmail.com">Enviar sugestão</a>
     </article>
   </section>
 </main>

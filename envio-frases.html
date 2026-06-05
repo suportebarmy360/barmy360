@@ -7,32 +7,39 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=20260604-v3">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script defer src="assets/js/config.js"></script>
 <script defer src="assets/js/main.js"></script>
-<script defer src="assets/js/public-data.js"></script>
+<script defer src="assets/js/public-data.js?v=20260604-v3"></script>
+<script defer src="assets/js/launch-guard.js?v=20260604-v3"></script>
 </head>
 <body>
 <header class="topbar">
-  <a href="index.html" class="brand"><div class="brand-symbol">B</div><div><strong>BARMY360</strong><span>ARMY BRASIL</span></div></a>
+  <a href="index.html" class="brand"><img class="brand-logo-iso" src="assets/images/b360-iso.png" alt="B360"><div><strong>BARMY360</strong><span>ARMY BRASIL</span></div></a>
   <details class="menu"><summary>☰ Menu</summary><nav class="menu-list">
-    <a href="index.html">Início</a><a href="projetos.html">Projetos</a><a href="ajuda.html">BARMY Ajuda</a><a href="stream.html">Stream</a><a href="comunidade.html">Comunidade</a><a href="apoie.html">Apoie</a>
+    <a href="index.html">Início</a><a href="projetos.html">Projetos</a><a href="ajuda.html">BARMY Ajuda</a><a href="stream.html">Stream</a><a href="comunidade.html">Comunidade</a><a href="cronogramas.html">Docs/Cronogramas</a><a href="apoie.html">Apoie</a>
   </nav></details>
 </header>
 <main class="section page">
   <div class="section-heading">
-    <p class="kicker">HANDBANNER</p>
+    <p class="kicker">HAND BANNER</p>
     <h1>Envio de frases</h1>
-    <p>Envie uma frase para análise dos ADMs. Não envie dados pessoais sensíveis.</p>
+    <p>Envie UMA (1) frase.</p>
   </div>
 
   <section class="admin-card phrase-form-card glow-card">
     <form id="phraseForm">
-      <label for="phraseText">Frase sugerida</label>
-      <textarea id="phraseText" maxlength="180" placeholder="Digite a frase para o handbanner" required></textarea>
-      <input id="phraseName" maxlength="80" placeholder="Nome ou apelido opcional">
-      <input id="phraseSocial" maxlength="80" placeholder="@ opcional para contato/crédito">
+      <label for="phraseText">Frase</label>
+      <textarea id="phraseText" maxlength="180" placeholder="Digite a frase para o Hand Banner" required></textarea>
+      <label for="phraseExplanation">Explicação da frase</label>
+      <textarea id="phraseExplanation" maxlength="800" placeholder="Explique o significado, intenção ou contexto da frase" required></textarea>
+      <label for="phraseName">Nome</label>
+      <input id="phraseName" maxlength="80" placeholder="Nome" required>
+      <label for="phraseSocial">@ e rede social</label>
+      <input id="phraseSocial" maxlength="120" placeholder="@ e rede social. Ex: @barmy360 no X/Twitter" required>
+      <label for="phraseEmail">E-mail</label>
+      <input id="phraseEmail" type="email" maxlength="120" placeholder="E-mail para contato" required>
       <button class="btn primary" type="submit">Enviar frase</button>
       <p id="phraseFormMsg" class="form-msg"></p>
     </form>
@@ -42,8 +49,7 @@
     <div class="detail-box glow-card">
       <h2>Como funciona?</h2>
       <ul class="pretty-list">
-        <li>As frases caem no painel ADM.</li>
-        <li>As ADMs podem baixar em CSV para abrir como planilha.</li>
+        <li>As frases enviadas vão para análise dos ADMs.</li>
         <li>Depois, as frases escolhidas podem virar opções de votação.</li>
       </ul>
     </div>

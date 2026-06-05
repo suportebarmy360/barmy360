@@ -38,7 +38,7 @@ async function loadVotingOptions() {
 
 async function renderVotingGrid(grid) {
   const statusText = document.getElementById(grid.dataset.statusTarget || "votingStatusText");
-  const query = grid.dataset.votacaoQuery || "Handbanner";
+  const query = grid.dataset.votacaoQuery || "Hand Banner";
   const projectKey = grid.dataset.votacaoProject || "";
 
   if (!sb()) {

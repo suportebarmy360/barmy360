@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=20260604-v3">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script defer src="assets/js/config.js"></script>
 <script defer src="assets/js/main.js"></script>
@@ -16,7 +16,7 @@
 <body class="admin-body">
 <header class="topbar admin-topbar">
   <a href="index.html" class="brand">
-    <div class="brand-symbol">B</div>
+    <img class="brand-logo-iso" src="assets/images/b360-iso.png" alt="B360">
     <div><strong>BARMY360</strong><span>PAINEL ADM</span></div>
   </a>
   <a class="btn outline small" href="index.html">Ver site</a>
@@ -25,7 +25,7 @@
   <div class="section-heading">
     <p class="kicker">ÁREA RESTRITA</p>
     <h1>Painel dos ADMs</h1>
-    <p>Essa página não aparece no menu público. Acesse digitando <strong>/admin.html</strong> e entrando com e-mail e senha cadastrados no Supabase.</p>
+    <p>Essa página não aparece no menu público. Acesse digitando <strong>/admin.html</strong> e entrando com e-mail e senha.</p>
   </div>
 
   <section id="loginArea" class="admin-card">
@@ -43,7 +43,10 @@
       <button class="tab" onclick="showAdminTab('ajuda', this)">BARMY Ajuda</button>
       <button class="tab" onclick="showAdminTab('stream', this)">Stream</button>
       <button class="tab" onclick="showAdminTab('frases', this)">Frases</button>
+      <button class="tab" onclick="showAdminTab('solos', this)">Projetos Solos</button>
+      <button class="tab" onclick="showAdminTab('artes', this)">Hand Banner Artes</button>
       <button class="tab" onclick="showAdminTab('site', this)">Textos e fotos</button>
+      <button class="tab" onclick="showAdminTab('docs', this)">Docs/Cronogramas</button>
       <button class="tab" onclick="adminLogout()">Sair</button>
     </div>
 
@@ -52,6 +55,10 @@
         <h2>Nova postagem da comunidade</h2>
         <input id="postTitle" placeholder="Título do aviso">
         <textarea id="postContent" placeholder="Texto do aviso"></textarea>
+        <input id="postImage" placeholder="Imagem do aviso: cole URL ou envie arquivo">
+        <input id="postImageFile" type="file" accept="image/*" onchange="uploadImageToField('postImageFile', 'postImage', 'postMsg')">
+        <input id="postLinkUrl" placeholder="Link opcional do aviso">
+        <input id="postLinkLabel" placeholder="Texto do botão. Ex: Abrir link">
         <input id="postAuthor" placeholder="Nome do ADM">
         <button class="btn primary" onclick="savePost()">Publicar aviso</button>
         <p id="postMsg" class="form-msg"></p>
@@ -68,17 +75,20 @@
       <section class="admin-card">
         <h2>1. Criar/editar projeto</h2>
         <input id="projectId" type="hidden">
-        <input id="projectTitle" placeholder="Título do projeto. Ex: Ocean Roxo">
+        <input id="projectTitle" placeholder="Título do projeto. Ex: Projeto de Fanchant">
         <textarea id="projectDescription" placeholder="Descrição curta que aparece no card"></textarea>
         <textarea id="projectDetails" placeholder="Explicação/dinâmica do projeto"></textarea>
         <input id="projectImage" placeholder="Imagem do projeto: cole URL, envie arquivo ou use emoji/texto">
         <input id="projectImageFile" type="file" accept="image/*" onchange="uploadImageToField('projectImageFile', 'projectImage', 'projectMsg')">
         <small class="admin-help">Ou selecione uma imagem do computador. Cards: 1200 x 675 px (16:9).</small>
         <select id="projectStatus">
+          <option value="fase_envio">Em fase de envio</option>
+          <option value="analise">Em análise</option>
           <option value="planejamento">Em planejamento</option>
           <option value="em_votacao">Em votação</option>
           <option value="aprovado">Aprovado</option>
-          <option value="fechado">Encerrado</option>
+          <option value="finalizado">Finalizado</option>
+          <option value="nao_aprovado">Não aprovado</option>
         </select>
         <label class="check-row"><input id="projectVotingOpen" type="checkbox" checked> Votação aberta para este projeto</label>
         <button class="btn primary" onclick="saveProject()">Salvar projeto</button>
@@ -90,7 +100,7 @@
         <h2>2. Votação do projeto</h2>
         <p class="admin-help">Escolha o projeto, abra/feche a votação e adicione as opções. Não precisa mais usar uma aba separada de votação.</p>
         <select id="simpleVoteProject"></select>
-        <input id="simpleVoteTitle" placeholder="Título da votação. Ex: Handbanner - Fase 1">
+        <input id="simpleVoteTitle" placeholder="Título da votação. Ex: Hand Banner - Fase 1">
         <textarea id="simpleVoteDescription" placeholder="Descrição da votação"></textarea>
         <select id="simpleVoteStatus">
           <option value="aberta">Aberta</option>
@@ -112,7 +122,7 @@
         <input id="simpleOptionTitle" placeholder="Nome/frase da opção">
         <input id="simpleOptionImage" placeholder="Imagem da opção, se necessário. Pode deixar vazio">
         <input id="simpleOptionImageFile" type="file" accept="image/*" onchange="uploadImageToField('simpleOptionImageFile', 'simpleOptionImage', 'simpleOptionMsg')">
-        <small class="admin-help">Ou selecione a imagem do computador. Handbanner: 3:1.</small>
+        <small class="admin-help">Ou selecione a imagem do computador. Hand Banner: 3:1.</small>
         <textarea id="simpleOptionDescription" placeholder="Descrição opcional"></textarea>
         <button class="btn primary" onclick="saveSimpleOption()">Adicionar opção neste projeto</button>
         <p id="simpleOptionMsg" class="form-msg"></p>
@@ -131,7 +141,7 @@
     <div id="tab-ajuda" class="admin-tab-panel hidden">
       <section class="admin-card">
         <h2>Editar BARMY Ajuda</h2>
-        <p class="admin-help">Use essa área para cadastrar fotos, textos e links que aparecem na página BARMY Ajuda. Imagens dos cards: 1200 x 675 px (16:9), JPG ou WebP. O card “O que pode levar na mochila” fica fixo no site.</p>
+        <p class="admin-help">Use essa área para cadastrar fotos, textos e links que aparecem na página BARMY Ajuda. Imagens dos cards: 1200 x 675 px (16:9), JPG ou WebP. O card “O que pode levar na mochila” agora é editável aqui. Coloque um item por linha para aparecer como checklist no site.</p>
         <input id="helpId" type="hidden">
         <input id="helpTitle" placeholder="Título do bloco. Ex: Mapa do estádio e entradas">
         <textarea id="helpContent" placeholder="Texto/descrição do bloco"></textarea>
@@ -146,6 +156,7 @@
           <option value="mapa">Mapa / entradas</option>
           <option value="setores">Vista dos setores</option>
           <option value="links">Links de apoio</option>
+          <option value="permitidos">O que levar na mochila / checklist</option>
           <option value="outros">Outro bloco</option>
         </select>
         <input id="helpPosition" type="number" min="0" placeholder="Ordem na página. Ex: 1, 2, 3">
@@ -194,7 +205,7 @@
 
     <div id="tab-frases" class="admin-tab-panel hidden">
       <section class="admin-card">
-        <h2>Frases enviadas para Handbanner</h2>
+        <h2>Frases enviadas para Hand Banner</h2>
         <p class="admin-help">As frases enviadas pelo formulário público aparecem aqui. Use o botão para baixar em CSV e abrir no Excel/Google Sheets.</p>
         <button class="btn primary" onclick="loadPhraseSubmissions()">Atualizar frases</button>
         <button class="btn outline" onclick="downloadPhrasesCsv()">Baixar CSV</button>
@@ -206,9 +217,78 @@
       </section>
     </div>
 
+
+
+    <div id="tab-docs" class="admin-tab-panel hidden">
+      <section class="admin-card">
+        <h2>Documentos, editais e cronogramas</h2>
+        <p class="admin-help">Cadastre links do Google Docs, PDFs ou arquivos enviados para leitura/download. Categoria “documento” aparece em Documentos para votação; categoria “cronograma” aparece na página Docs/Cronogramas.</p>
+        <input id="docId" type="hidden">
+        <input id="docTitle" placeholder="Título. Ex: Termo de votação">
+        <textarea id="docDescription" placeholder="Descrição curta do documento"></textarea>
+        <input id="docFileUrl" placeholder="Link para ler o documento. Ex: PDF, Google Docs ou Drive">
+        <input id="docFileInput" type="file" accept="application/pdf,image/*,.doc,.docx,.ppt,.pptx" onchange="uploadFileToField('docFileInput','docFileUrl','docMsg')">
+        <input id="docDownloadUrl" placeholder="Link para baixar. Se deixar vazio, usa o mesmo link acima">
+        <input id="docCoverImage" placeholder="Capa/foto do card: cole URL ou envie imagem abaixo">
+        <input id="docCoverImageFile" type="file" accept="image/*" onchange="uploadImageToField('docCoverImageFile','docCoverImage','docMsg')">
+        <select id="docCategory">
+          <option value="documento">Documento para votação</option>
+          <option value="cronograma">Cronograma</option>
+          <option value="edital">Edital</option>
+        </select>
+        <input id="docPosition" type="number" min="0" placeholder="Ordem na página">
+        <button class="btn primary" onclick="saveSiteDocument()">Salvar documento</button>
+        <button class="btn outline" onclick="clearSiteDocumentForm()">Limpar</button>
+        <p id="docMsg" class="form-msg"></p>
+      </section>
+      <section class="admin-card">
+        <h2>Documentos cadastrados</h2>
+        <div id="adminDocsList" class="admin-list"></div>
+      </section>
+    </div>
+
+
+    <div id="tab-solos" class="admin-tab-panel hidden">
+      <section class="admin-card">
+        <h2>Projetos Solos</h2>
+        <p class="admin-help">Edite os cards dos membros. Por padrão eles ficam como EM BREVE.</p>
+        <input id="soloId" type="hidden">
+        <input id="soloMember" placeholder="Membro. Ex: RM">
+        <input id="soloTitle" placeholder="Título do card">
+        <textarea id="soloDescription" placeholder="Descrição"></textarea>
+        <input id="soloImage" placeholder="Imagem ou emoji">
+        <input id="soloImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloImageFile','soloImage','soloMsg')">
+        <select id="soloStatus"><option value="planejamento">Em breve</option><option value="fase_envio">Em fase de envio</option><option value="em_votacao">Em votação</option><option value="aprovado">Aprovado</option><option value="finalizado">Finalizado</option></select>
+        <input id="soloPosition" type="number" min="0" placeholder="Ordem">
+        <button class="btn primary" onclick="saveSoloMember()">Salvar card</button>
+        <button class="btn outline" onclick="clearSoloForm()">Limpar</button>
+        <p id="soloMsg" class="form-msg"></p>
+      </section>
+      <section class="admin-card"><h2>Cards cadastrados</h2><div id="adminSolosList" class="admin-list"></div></section>
+    </div>
+
+    <div id="tab-artes" class="admin-tab-panel hidden">
+      <section class="admin-card">
+        <h2>Coleta de artes do Hand Banner</h2>
+        <p class="admin-help">Ative ou desative a página de envio de artes. Quando ativada, o botão aparece na página do projeto Hand Banner.</p>
+        <label class="check-row"><input id="hbArtEnabled" type="checkbox"> Publicar envio de artes do Hand Banner</label>
+        <input id="hbArtTitle" placeholder="Título do botão/card. Ex: Enviar arte do Hand Banner">
+        <textarea id="hbArtText" placeholder="Texto explicando a fase de envio de artes"></textarea>
+        <button class="btn primary" onclick="saveHandbannerArtSettings()">Salvar publicação</button>
+        <button class="btn outline" onclick="loadHandbannerSubmissions()">Atualizar envios</button>
+        <a class="btn outline" href="envio-handbanner-artes.html" target="_blank">Abrir página de envio</a>
+        <p id="hbAdminMsg" class="form-msg"></p>
+      </section>
+      <section class="admin-card"><h2>Lista de envios</h2><div id="adminHBSubmissionsList" class="admin-list"></div></section>
+    </div>
+
     <div id="tab-site" class="admin-tab-panel hidden">
       <section class="admin-card">
         <h2>Textos principais do site</h2>
+        <label>Modo de liberação do site</label>
+        <select id="siteLaunchMode"><option value="locked">Em breve / fechado</option><option value="open">Liberar site agora</option><option value="auto">Automático pela data</option></select>
+        <input id="siteLaunchAt" placeholder="Data/hora automática. Ex: 2026-06-05T20:00:00-03:00">
+        <p class="admin-help">Use “Liberar site agora” para abrir a Home pública sem mexer no GitHub.</p>
         <input id="siteHeroTitle" placeholder="Título da tela inicial">
         <textarea id="siteHeroText" placeholder="Texto da tela inicial"></textarea>
         <input id="siteHeroImage" placeholder="URL de imagem/banner da tela inicial">

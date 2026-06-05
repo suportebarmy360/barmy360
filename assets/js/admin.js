@@ -158,6 +158,8 @@ async function savePost() {
     content: val("postContent"),
     author: val("postAuthor") || "ADM",
     image_url: val("postImage"),
+    link_url: val("postLinkUrl"),
+    link_label: val("postLinkLabel"),
   };
 
   if (!post.title || !post.content) {
@@ -174,7 +176,7 @@ async function savePost() {
   }
 
   setMsg("postMsg", "Aviso publicado.");
-  ["postTitle", "postContent", "postAuthor", "postImage"].forEach((id) => {
+  ["postTitle", "postContent", "postAuthor", "postImage", "postLinkUrl", "postLinkLabel"].forEach((id) => {
     document.getElementById(id).value = "";
   });
   loadAdminData();
@@ -291,7 +293,7 @@ function projectVotingKeyAdmin(p) {
 }
 
 function simpleVoteSelectedKey() {
-  return val("simpleVoteProject") || "handbanner";
+  return val("simpleVoteProject") || "handbanner-frases";
 }
 
 function renderSimpleProjectSelect(projects, votacoes, opcoes) {
@@ -299,9 +301,8 @@ function renderSimpleProjectSelect(projects, votacoes, opcoes) {
   if (!select) return;
 
   const base = [
-    { key: "handbanner", label: "Handbanner" },
-    { key: "ocean-roxo", label: "Ocean Roxo" },
-    { key: "mensagem-final", label: "Mensagem Final" },
+    { key: "handbanner-frases", label: "Hand Banner - Envio de frases" },
+    { key: "handbanner-artes", label: "Hand Banner - Envio de artes" },
   ];
 
   const dynamic = (projects || []).map((p) => ({
@@ -504,7 +505,7 @@ function editVotacao(v) {
   document.getElementById("votacaoFase").value = v.fase || "fase1";
   document.getElementById("votacaoStatus").value = v.status || "aberta";
   document.getElementById("votacaoMostrarRanking").checked = v.mostrar_ranking !== false;
-  const knownKeys = ["handbanner", "ocean-roxo", "mensagem-final"];
+  const knownKeys = ["handbanner"];
   const pk = v.project_key || "handbanner";
   document.getElementById("votacaoProjectKey").value = knownKeys.includes(pk) ? pk : "outro";
   document.getElementById("votacaoProjectKeyCustom").value = knownKeys.includes(pk) ? "" : pk;
@@ -850,18 +851,22 @@ async function getStreamAdmin() {
 
 async function saveSiteSettings() {
   const s = {
+    id: 1,
+    launch_mode: val("siteLaunchMode") || "locked",
+    launch_at: val("siteLaunchAt") || "2026-06-05T20:00:00-03:00",
     hero_title: val("siteHeroTitle"),
     hero_text: val("siteHeroText"),
     hero_image: val("siteHeroImage"),
     contact_email: val("siteContactEmail"),
+    handbanner_art_enabled: !!document.getElementById("hbArtEnabled")?.checked,
+    handbanner_art_title: val("hbArtTitle") || "Enviar arte do Hand Banner",
+    handbanner_art_text: val("hbArtText") || "Envie sua arte seguindo o edital e o manual de submissão.",
   };
-
   localStorage.setItem(LS_SITE, JSON.stringify(s));
-
   if (sb()) {
-    await sb().from("site_settings").upsert({ id: 1, ...s });
+    const { error } = await sb().from("site_settings").upsert(s);
+    if (error) return setMsg("siteMsg", "Erro: " + error.message);
   }
-
   setMsg("siteMsg", "Alterações salvas.");
 }
 
@@ -944,19 +949,19 @@ async function loadPhraseSubmissions() {
   document.getElementById("phraseMsg") && (document.getElementById("phraseMsg").textContent = rows.length + " frase(s) carregada(s).");
   list.innerHTML = rows.length ? rows.map((r) => `<div class="admin-item">
     <strong>${escapeHtml(r.phrase || "Frase")}</strong>
-    <p>${escapeHtml(r.author_name || "Sem nome")} ${r.social_handle ? "• " + escapeHtml(r.social_handle) : ""}</p>
+    <p>${escapeHtml(r.phrase_explanation || "Sem explicação")}</p><p>${escapeHtml(r.author_name || "Sem nome")} ${r.social_handle ? "• " + escapeHtml(r.social_handle) : ""} ${r.contact_email ? "• " + escapeHtml(r.contact_email) : ""}</p>
     <small>${escapeHtml(new Date(r.created_at || Date.now()).toLocaleString("pt-BR"))}</small>
   </div>`).join("") : `<div class="admin-item"><strong>Nenhuma frase enviada ainda.</strong><p>Quando o formulário público for usado, as frases aparecem aqui.</p></div>`;
 }
 function downloadPhrasesCsv() {
   const rows = cachedPhrases || [];
-  const header = ["frase", "nome", "arroba", "data"];
-  const csv = [header.join(";")].concat(rows.map((r) => [r.phrase, r.author_name, r.social_handle, r.created_at].map((v) => `"${String(v || "").replace(/"/g, '""')}"`).join(";"))).join("\n");
+  const header = ["frase", "explicacao", "nome", "arroba", "email", "data"];
+  const csv = [header.join(";")].concat(rows.map((r) => [r.phrase, r.phrase_explanation, r.author_name, r.social_handle, r.contact_email, r.created_at].map((v) => `"${String(v || "").replace(/"/g, '""')}"`).join(";"))).join("\n");
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "frases-handbanner-barmy360.csv";
+  a.download = "frases-hand-banner-barmy360.csv";
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -1030,7 +1035,7 @@ async function loadAdminData() {
             </article>`;
           })
           .join("")
-      : "<p>Nenhuma votação criada. Crie a votação Handbanner - Fase 1 aqui.</p>";
+      : "<p>Nenhuma votação criada. Crie a votação Hand Banner - Fase 1 aqui.</p>";
   }
 
   const opcoesList = document.getElementById("adminOpcoesList");
@@ -1081,3 +1086,166 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadAdminData();
   }
 });
+
+
+// ===== Ajustes finais: upload genérico, docs/cronogramas e exclusão de post =====
+const LS_DOCS = "barmy360_site_documents";
+
+async function uploadFileToField(fileInputId, targetInputId, msgId) {
+  const input = document.getElementById(fileInputId);
+  const target = document.getElementById(targetInputId);
+  const file = input?.files?.[0];
+  if (!file || !target) return;
+  if (!sb()) return setMsg(msgId, "Supabase não conectado. Confira assets/js/config.js.");
+  try {
+    setMsg(msgId, "Enviando arquivo...");
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 100);
+    const path = `docs/${Date.now()}-${Math.random().toString(16).slice(2)}-${safeName}`;
+    const { error } = await sb().storage.from("barmy360-images").upload(path, file, { cacheControl: "3600", upsert: false });
+    if (error) return setMsg(msgId, "Erro no upload: " + error.message + " — confira o bucket barmy360-images.");
+    const { data } = sb().storage.from("barmy360-images").getPublicUrl(path);
+    target.value = data.publicUrl;
+    setMsg(msgId, "Arquivo enviado e link preenchido.");
+  } catch (err) {
+    setMsg(msgId, "Erro no upload: " + (err.message || err));
+  }
+}
+window.uploadFileToField = uploadFileToField;
+
+async function deletePost(id) {
+  if (!confirm("Excluir esta postagem?")) return;
+  if (sb()) {
+    const { error } = await sb().from("community_posts").delete().eq("id", id);
+    if (error) return alert("Erro: " + error.message);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_POSTS) || "[]").filter((p) => String(p.id) !== String(id));
+    localStorage.setItem(LS_POSTS, JSON.stringify(arr));
+  }
+  loadAdminData();
+}
+
+async function getSiteDocumentsAdmin() {
+  if (sb()) {
+    const { data } = await sb().from("site_documents").select("*").order("position", { ascending: true }).order("created_at", { ascending: true });
+    return data || [];
+  }
+  return JSON.parse(localStorage.getItem(LS_DOCS) || "[]").sort((a,b)=>Number(a.position||0)-Number(b.position||0));
+}
+async function saveSiteDocument() {
+  const item = {
+    title: val("docTitle"),
+    description: val("docDescription"),
+    file_url: val("docFileUrl"),
+    download_url: val("docDownloadUrl") || val("docFileUrl"),
+    cover_image: val("docCoverImage"),
+    image_url: val("docCoverImage"),
+    category: val("docCategory") || "documento",
+    position: Number(val("docPosition") || 0),
+  };
+  if (!item.title) return setMsg("docMsg", "Preencha o título do documento.");
+  const id = val("docId");
+  if (sb()) {
+    const query = id ? sb().from("site_documents").update(item).eq("id", id) : sb().from("site_documents").insert(item);
+    const { error } = await query;
+    if (error) return setMsg("docMsg", "Erro: " + error.message + " — rode o SQL final do ZIP.");
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_DOCS) || "[]");
+    if (id) arr = arr.map((d)=>String(d.id)===String(id)?{...d,...item}:d);
+    else arr.push({...item, id: Date.now(), created_at: new Date().toISOString()});
+    localStorage.setItem(LS_DOCS, JSON.stringify(arr));
+  }
+  setMsg("docMsg", "Documento salvo.");
+  clearSiteDocumentForm();
+  loadAdminData();
+}
+function editSiteDocument(d) {
+  document.getElementById("docId").value = d.id || "";
+  document.getElementById("docTitle").value = d.title || "";
+  document.getElementById("docDescription").value = d.description || "";
+  document.getElementById("docFileUrl").value = d.file_url || d.link_url || "";
+  document.getElementById("docDownloadUrl").value = d.download_url || d.file_url || d.link_url || "";
+  document.getElementById("docCoverImage").value = d.cover_image || d.image_url || "";
+  document.getElementById("docCategory").value = d.category || "documento";
+  document.getElementById("docPosition").value = d.position || 0;
+  showAdminTab("docs", document.querySelector("[onclick*=docs]"));
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function clearSiteDocumentForm() {
+  ["docId","docTitle","docDescription","docFileUrl","docDownloadUrl","docCoverImage","docPosition"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+  const cat=document.getElementById("docCategory"); if(cat) cat.value="documento";
+}
+async function deleteSiteDocument(id) {
+  if (!confirm("Excluir este documento?")) return;
+  if (sb()) {
+    const { error } = await sb().from("site_documents").delete().eq("id", id);
+    if (error) return alert("Erro: " + error.message);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_DOCS) || "[]").filter((d)=>String(d.id)!==String(id));
+    localStorage.setItem(LS_DOCS, JSON.stringify(arr));
+  }
+  loadAdminData();
+}
+async function renderDocsAdmin() {
+  const list = document.getElementById("adminDocsList");
+  if (!list) return;
+  const docs = await getSiteDocumentsAdmin();
+  list.innerHTML = docs.length ? docs.map((d)=>`<article class="mini-admin-item">
+    <strong>${escapeHtml(d.title || "Documento")}</strong>
+    ${(d.cover_image||d.image_url) ? `<img class="admin-thumb" src="${escapeHtml(d.cover_image||d.image_url)}" alt="">` : ""}
+    <p>${escapeHtml(d.description || "")}</p>
+    <small>${escapeHtml(d.category || "documento")} • ordem ${Number(d.position || 0)}</small>
+    <div class="admin-actions">
+      ${(d.file_url||d.link_url) ? `<a class="btn small primary" href="${escapeHtml(d.file_url||d.link_url)}" target="_blank" rel="noopener">Ler</a>` : ""}
+      ${(d.download_url||d.file_url||d.link_url) ? `<a class="btn small outline" href="${escapeHtml(d.download_url||d.file_url||d.link_url)}" download>Baixar</a>` : ""}
+      <button class="btn small outline" onclick='editSiteDocument(${JSON.stringify(d).replace(/'/g,"&#39;")})'>Editar</button>
+      <button class="btn small outline" onclick="deleteSiteDocument('${escapeHtml(d.id)}')">Excluir</button>
+    </div>
+  </article>`).join("") : "<p>Nenhum documento cadastrado ainda.</p>";
+}
+
+const __oldLoadAdminData = loadAdminData;
+loadAdminData = async function() {
+  await __oldLoadAdminData();
+  await renderDocsAdmin();
+  const postsList = document.getElementById("adminPostsList");
+  if (postsList) {
+    const posts = await getPostsAdmin();
+    postsList.innerHTML = posts.length ? posts.map((p)=>`<article class="mini-admin-item"><strong>${escapeHtml(p.title)}</strong>${p.image_url ? `<img class="admin-thumb" src="${escapeHtml(p.image_url)}" alt="">` : ""}<p>${escapeHtml(p.content)}</p>${p.link_url ? `<a class="btn small primary" href="${escapeHtml(p.link_url)}" target="_blank" rel="noopener">${escapeHtml(p.link_label || "Abrir link")}</a>` : ""}<small>${escapeHtml(p.author || "ADM")}</small><div class="admin-actions"><button class="btn small outline" onclick="deletePost('${escapeHtml(p.id)}')">Excluir</button></div></article>`).join("") : "<p>Nenhum aviso publicado.</p>";
+  }
+};
+
+
+/* ===== BARMY360 v2 - lançamento, solos e artes ===== */
+async function loadSiteSettingsAdmin(){
+  let s={};
+  if(sb()){ try{ const {data}=await sb().from('site_settings').select('*').eq('id',1).maybeSingle(); if(data) s=data; }catch(e){} }
+  if(!Object.keys(s).length){ try{s=JSON.parse(localStorage.getItem(LS_SITE)||'{}')}catch(e){} }
+  const set=(id,v)=>{const el=document.getElementById(id); if(el && v!==undefined && v!==null) el.value=v};
+  set('siteLaunchMode', s.launch_mode || 'locked'); set('siteLaunchAt', s.launch_at || '2026-06-05T20:00:00-03:00'); set('siteHeroTitle', s.hero_title||''); set('siteHeroText', s.hero_text||''); set('siteHeroImage', s.hero_image||''); set('siteContactEmail', s.contact_email||'Projeto.barmy@gmail.com'); set('hbArtTitle', s.handbanner_art_title||'Enviar arte do Hand Banner'); set('hbArtText', s.handbanner_art_text||'Envie sua arte seguindo o edital e o manual de submissão.'); const hbChk=document.getElementById('hbArtEnabled'); if(hbChk) hbChk.checked=!!s.handbanner_art_enabled;
+}
+const LS_SOLOS_ADMIN='barmy360_solo_members';
+function defaultSolosAdmin(){return ['RM','Jin','SUGA','j-hope','Jimin','V','Jung Kook'].map((name,i)=>({id:String(i+1),member_name:name,title:name,description:'Projeto solo em breve.',status:'planejamento',image_url:'💜',position:i+1}))}
+async function getSolosAdmin(){ if(sb()){ const {data}=await sb().from('solo_members').select('*').order('position',{ascending:true}); return data && data.length ? data : defaultSolosAdmin(); } const a=JSON.parse(localStorage.getItem(LS_SOLOS_ADMIN)||'[]'); return a.length?a:defaultSolosAdmin(); }
+function clearSoloForm(){ ['soloId','soloMember','soloTitle','soloDescription','soloImage','soloPosition'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=''}); const st=document.getElementById('soloStatus'); if(st) st.value='planejamento'; }
+function editSolo(m){ document.getElementById('soloId').value=m.id||''; document.getElementById('soloMember').value=m.member_name||''; document.getElementById('soloTitle').value=m.title||m.member_name||''; document.getElementById('soloDescription').value=m.description||''; document.getElementById('soloImage').value=m.image_url||''; document.getElementById('soloStatus').value=m.status||'planejamento'; document.getElementById('soloPosition').value=m.position||''; }
+async function saveSoloMember(){ const row={member_name:val('soloMember'), title:val('soloTitle')||val('soloMember'), description:val('soloDescription'), image_url:val('soloImage')||'💜', status:val('soloStatus')||'planejamento', position:Number(val('soloPosition')||0)}; if(!row.member_name) return setMsg('soloMsg','Preencha o nome do membro.'); const id=val('soloId'); if(sb()){ const q=id?sb().from('solo_members').update(row).eq('id',id):sb().from('solo_members').insert(row); const {error}=await q; if(error) return setMsg('soloMsg','Erro: '+error.message); } else { let arr=JSON.parse(localStorage.getItem(LS_SOLOS_ADMIN)||'[]'); if(id) arr=arr.map(x=>String(x.id)===String(id)?{...x,...row}:x); else arr.push({...row,id:Date.now()}); localStorage.setItem(LS_SOLOS_ADMIN,JSON.stringify(arr)); } setMsg('soloMsg','Card salvo.'); clearSoloForm(); loadSolosAdminList(); }
+async function deleteSoloMember(id){ if(!confirm('Excluir este card solo?')) return; if(sb()){ const {error}=await sb().from('solo_members').delete().eq('id',id); if(error) return alert(error.message); } else { let arr=JSON.parse(localStorage.getItem(LS_SOLOS_ADMIN)||'[]').filter(x=>String(x.id)!==String(id)); localStorage.setItem(LS_SOLOS_ADMIN,JSON.stringify(arr)); } loadSolosAdminList(); }
+async function loadSolosAdminList(){ const el=document.getElementById('adminSolosList'); if(!el) return; const rows=await getSolosAdmin(); el.innerHTML=rows.map(m=>`<article class="mini-admin-item"><strong>${escapeHtml(m.title||m.member_name)}</strong><p>${escapeHtml(m.description||'')}</p><small>${escapeHtml(m.status||'planejamento')}</small><div class="admin-actions"><button class="btn small outline" onclick='editSolo(${JSON.stringify(m).replace(/'/g,'&#39;')})'>Editar</button><button class="btn small outline" onclick="deleteSoloMember('${escapeHtml(m.id)}')">Excluir</button></div></article>`).join(''); }
+
+async function saveHandbannerArtSettings(){
+  let s={};
+  try{s=JSON.parse(localStorage.getItem(LS_SITE)||'{}')}catch(e){}
+  const patch={
+    id:1,
+    handbanner_art_enabled: !!document.getElementById('hbArtEnabled')?.checked,
+    handbanner_art_title: val('hbArtTitle') || 'Enviar arte do Hand Banner',
+    handbanner_art_text: val('hbArtText') || 'Envie sua arte seguindo o edital e o manual de submissão.'
+  };
+  s={...s,...patch};
+  localStorage.setItem(LS_SITE, JSON.stringify(s));
+  if(sb()){ const {error}=await sb().from('site_settings').upsert(s); if(error) return setMsg('hbAdminMsg','Erro: '+error.message+' — rode o SQL atualizado do ZIP.'); }
+  setMsg('hbAdminMsg','Configuração salva.');
+}
+async function loadHandbannerSubmissions(){ const el=document.getElementById('adminHBSubmissionsList'); if(!el) return; if(!sb()){ el.innerHTML='<p>Supabase não conectado.</p>'; return; } const {data,error}=await sb().from('handbanner_art_submissions').select('*').order('created_at',{ascending:false}).limit(1000); if(error){ el.innerHTML=`<p>${escapeHtml(error.message)}</p>`; return; } const rows=data||[]; document.getElementById('hbAdminMsg') && (document.getElementById('hbAdminMsg').textContent=rows.length+' envio(s).'); el.innerHTML=rows.length?rows.map(r=>`<article class="mini-admin-item"><strong>${escapeHtml(r.full_name||'Sem nome')}</strong><p>${escapeHtml(r.social_handle||'')} • ${escapeHtml(r.contact_email||r.google_email||'')}</p><p><a class="btn small primary" href="${escapeHtml(r.cloud_link||'#')}" target="_blank">Abrir pasta</a></p><small>${escapeHtml(new Date(r.created_at||Date.now()).toLocaleString('pt-BR'))}</small></article>`).join(''):'<p>Nenhum envio ainda.</p>'; }
+const __oldLoadAdminDataV2 = loadAdminData;
+loadAdminData = async function(){ await __oldLoadAdminDataV2(); await loadSiteSettingsAdmin(); await loadSolosAdminList(); await loadHandbannerSubmissions(); };
