@@ -29,9 +29,22 @@
 
   <section class="admin-card phrase-form-card glow-card">
   <div class="admin-card glow-card"
-    <h2>Envio Finalizado</div>
-    <p>O Período de envio de frases foi encerrado</p>
-            
+     <section class="admin-card phrase-form-card glow-card">
+    <form id="phraseForm">
+      <label for="phraseText">Frase</label>
+      <textarea id="phraseText" maxlength="180" placeholder="Digite a frase para o Hand Banner" required></textarea>
+      <label for="phraseExplanation">Explicação da frase</label>
+      <textarea id="phraseExplanation" maxlength="800" placeholder="Explique o significado, intenção ou contexto da frase" required></textarea>
+      <label for="phraseName">Nome</label>
+      <input id="phraseName" maxlength="80" placeholder="Nome" required>
+      <label for="phraseSocial">@ e rede social</label>
+      <input id="phraseSocial" maxlength="120" placeholder="@ e rede social. Ex: @barmy360 no X/Twitter" required>
+      <label for="phraseEmail">E-mail</label>
+      <input id="phraseEmail" type="email" maxlength="120" placeholder="E-mail para contato" required>
+      <button class="btn primary" type="submit">Enviar frase</button>
+      <p id="phraseFormMsg" class="form-msg"></p>
+    </form>
+  </section>
   </section>
 
   <section class="section transparent-section">
