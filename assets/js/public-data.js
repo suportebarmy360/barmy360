@@ -14,7 +14,7 @@ const DEFAULT_HANDBANNER_PHRASES_PROJECT = {
   title: "HAND BANNER - Envio de frases",
   description: "Envie sua frase para participar da seleção do Hand Banner.",
   details: "As frases enviadas serão avaliadas pelas ADMs. Depois, as aprovadas poderão entrar em votação.",
-  status: "fase de envio finalizada",
+  status: "Finalizado",
   image_url: "assets/images/b360-iso.png",
   published: true,
   is_default: true,
@@ -163,7 +163,8 @@ function projectIsHandbanner(p) {
 }
 
 function projectDisplayStatus(p) {
-  if (projectIsHandbannerPhrases(p) || projectIsHandbannerArts(p)) return "fase_envio";
+  if (projectIsHandbannerPhrases(p)) return p?.status || "finalizado";
+  if (projectIsHandbannerArts(p)) return p?.status || "fase_envio";
   return p?.status || "em_votacao";
 }
 
