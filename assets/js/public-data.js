@@ -14,7 +14,7 @@ const DEFAULT_HANDBANNER_PHRASES_PROJECT = {
   title: "HAND BANNER - Envio de frases",
   description: "Envie sua frase para participar da seleção do Hand Banner.",
   details: "As frases enviadas serão avaliadas pelas ADMs. Depois, as aprovadas poderão entrar em votação.",
-  status: "fase_envio",
+  status: "fase de envio finalizada",
   image_url: "assets/images/b360-iso.png",
   published: true,
   is_default: true,
