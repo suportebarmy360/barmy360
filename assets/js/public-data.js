@@ -231,7 +231,7 @@ function handbannerPhraseProjectMarkup(p) {
         <p>${escapeHtml(p.description || "Envie sua frase para participar da seleção do Hand Banner.")}</p>
         <div class="project-detail-meta">
           <span class="meta-pill">💜 BARMY360</span>
-          <span class="meta-pill">Preencha o Formulário</span>
+          <span class="meta-pill">Finalizado</span>
         </div>
         <div class="hero-actions">
           <a class="btn primary" href="envio-frases.html">Enviar frase</a>
