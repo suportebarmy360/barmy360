@@ -38,18 +38,17 @@
 
   <section id="dashboardArea" class="hidden">
     <div class="admin-tabs">
-      <button class="tab active" onclick="showAdminTab('posts', this)">Postagens</button>
-      <button class="tab" onclick="showAdminTab('projects', this)">Projetos</button>
-      <button class="tab" onclick="showAdminTab('ajuda', this)">BARMY Ajuda</button>
-      <button class="tab" onclick="showAdminTab('stream', this)">Stream</button>
-      <button class="tab" onclick="showAdminTab('frases', this)">Frases</button>
+      <button class="tab active" onclick="showAdminTab('posts', this)">Avisos</button>
+      <button class="tab" onclick="showAdminTab('projects', this)">Projetos e Votações</button>
       <button class="tab" onclick="showAdminTab('solos', this)">Projetos Solos</button>
       <button class="tab" onclick="showAdminTab('artes', this)">Hand Banner Artes</button>
-      <button class="tab" onclick="showAdminTab('site', this)">Textos e fotos</button>
+      <button class="tab" onclick="showAdminTab('frases', this)">Frases Recebidas</button>
+      <button class="tab" onclick="showAdminTab('ajuda', this)">BARMY Ajuda</button>
+      <button class="tab" onclick="showAdminTab('stream', this)">Stream</button>
       <button class="tab" onclick="showAdminTab('docs', this)">Docs/Cronogramas</button>
+      <button class="tab" onclick="showAdminTab('site', this)">Configurações</button>
       <button class="tab" onclick="adminLogout()">Sair</button>
     </div>
-
     <div id="tab-posts" class="admin-tab-panel">
       <section class="admin-card">
         <h2>Nova postagem da comunidade</h2>
@@ -251,20 +250,43 @@
     <div id="tab-solos" class="admin-tab-panel hidden">
       <section class="admin-card">
         <h2>Projetos Solos</h2>
-        <p class="admin-help">Edite os cards dos membros. Por padrão eles ficam como EM BREVE.</p>
+        <p class="admin-help">Edite o card do membro e a imagem que aparece dentro da página individual.</p>
         <input id="soloId" type="hidden">
         <input id="soloMember" placeholder="Membro. Ex: RM">
-        <input id="soloTitle" placeholder="Título do card">
-        <textarea id="soloDescription" placeholder="Descrição"></textarea>
-        <input id="soloImage" placeholder="Imagem ou emoji">
+        <input id="soloTitle" placeholder="Título do card. Ex: RM">
+        <textarea id="soloDescription" placeholder="Descrição do membro / página"></textarea>
+        <label>Capa do card do membro, na tela Projetos Solos</label>
+        <input id="soloCoverImage" placeholder="URL, upload ou emoji para a capa do card">
+        <input id="soloCoverImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloCoverImageFile','soloCoverImage','soloMsg')">
+        <label>Foto/imagem dentro da página do membro</label>
+        <input id="soloImage" placeholder="URL, upload ou emoji para a página do membro">
         <input id="soloImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloImageFile','soloImage','soloMsg')">
         <select id="soloStatus"><option value="planejamento">Em breve</option><option value="fase_envio">Em fase de envio</option><option value="em_votacao">Em votação</option><option value="aprovado">Aprovado</option><option value="finalizado">Finalizado</option></select>
         <input id="soloPosition" type="number" min="0" placeholder="Ordem">
-        <button class="btn primary" onclick="saveSoloMember()">Salvar card</button>
+        <button class="btn primary" onclick="saveSoloMember()">Salvar membro</button>
         <button class="btn outline" onclick="clearSoloForm()">Limpar</button>
         <p id="soloMsg" class="form-msg"></p>
       </section>
-      <section class="admin-card"><h2>Cards cadastrados</h2><div id="adminSolosList" class="admin-list"></div></section>
+      <section class="admin-card"><h2>Membros cadastrados</h2><div id="adminSolosList" class="admin-list"></div></section>
+      <section class="admin-card">
+        <h2>Projetos do membro</h2>
+        <p class="admin-help">Cadastre os cards que aparecem dentro da página individual de cada membro.</p>
+        <input id="soloProjectId" type="hidden">
+        <label>Membro</label>
+        <select id="soloProjectMember"></select>
+        <input id="soloProjectTitle" placeholder="Título do projeto. Ex: Fan Project RM">
+        <textarea id="soloProjectDescription" placeholder="Descrição do projeto"></textarea>
+        <label>Capa do projeto, dentro da página do membro</label>
+        <input id="soloProjectImage" placeholder="URL, upload ou emoji para a capa do projeto">
+        <input id="soloProjectImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloProjectImageFile','soloProjectImage','soloProjectMsg')">
+        <input id="soloProjectLink" placeholder="Link opcional do projeto">
+        <select id="soloProjectStatus"><option value="planejamento">Em breve</option><option value="fase_envio">Em fase de envio</option><option value="em_votacao">Em votação</option><option value="aprovado">Aprovado</option><option value="finalizado">Finalizado</option></select>
+        <input id="soloProjectPosition" type="number" min="0" placeholder="Ordem">
+        <button class="btn primary" onclick="saveSoloProject()">Salvar projeto do membro</button>
+        <button class="btn outline" onclick="clearSoloProjectForm()">Limpar</button>
+        <p id="soloProjectMsg" class="form-msg"></p>
+      </section>
+      <section class="admin-card"><h2>Projetos solos cadastrados</h2><div id="adminSoloProjectsList" class="admin-list"></div></section>
     </div>
 
     <div id="tab-artes" class="admin-tab-panel hidden">
@@ -286,9 +308,9 @@
       <section class="admin-card">
         <h2>Textos principais do site</h2>
         <label>Modo de liberação do site</label>
-        <select id="siteLaunchMode"><option value="locked">Em breve / fechado</option><option value="open">Liberar site agora</option><option value="auto">Automático pela data</option></select>
+        <select id="siteLaunchMode"><option value="open">Site aberto</option><option value="locked">Em breve / fechado</option><option value="auto">Automático pela data</option></select>
         <input id="siteLaunchAt" placeholder="Data/hora automática. Ex: 2026-06-05T20:00:00-03:00">
-        <p class="admin-help">Use “Liberar site agora” para abrir a Home pública sem mexer no GitHub.</p>
+        <p class="admin-help">O site já está aberto e a tela de contador foi retirada. Use apenas se quiser fechar temporariamente.</p>
         <input id="siteHeroTitle" placeholder="Título da tela inicial">
         <textarea id="siteHeroText" placeholder="Texto da tela inicial"></textarea>
         <input id="siteHeroImage" placeholder="URL de imagem/banner da tela inicial">
