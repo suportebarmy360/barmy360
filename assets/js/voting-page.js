@@ -16,6 +16,17 @@ function escapeAttr(value) {
   return escapeHtml(value).replace(/`/g, "");
 }
 
+
+function getBarmyVoterFingerprint() {
+  const key = "barmy360_voter_fingerprint";
+  let value = localStorage.getItem(key);
+  if (!value) {
+    value = "voter_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2);
+    localStorage.setItem(key, value);
+  }
+  return value;
+}
+
 function optionImage(opcao) {
   const img = opcao.imagem_url || opcao.imagem || "";
   if (!String(img).trim()) return "";
@@ -134,11 +145,12 @@ async function voteOption(opcaoId, votacaoId, button) {
   const { data, error } = await sb().rpc("registrar_voto_opcao", {
     opcao: String(opcaoId),
     votacao: String(votacaoId),
+    voter_fingerprint: getBarmyVoterFingerprint(),
   });
 
   if (error) {
     console.error(error);
-    alert("Erro ao registrar voto: " + error.message);
+    alert(error.message || "Erro ao registrar voto.");
     if (button) {
       button.disabled = false;
       button.textContent = "Votar";

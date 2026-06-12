@@ -285,8 +285,11 @@ function slugifyAdmin(value) {
 
 function projectVotingKeyAdmin(p) {
   const titleSlug = slugifyAdmin(p?.title || p?.titulo || p?.id);
-  if (String(p?.project_key || "").trim()) return String(p.project_key);
-  if (titleSlug.includes("handbanner")) return "handbanner";
+  const explicitKey = String(p?.project_key || "").trim();
+  const type = String(p?.project_type || "").toLowerCase().trim();
+  if (type === "frases" || explicitKey === "handbanner-frases" || String(p?.id || "") === "handbanner-frases") return "handbanner-frases";
+  if (type === "artes" || explicitKey === "handbanner-artes" || String(p?.id || "") === "handbanner-artes") return "handbanner-artes";
+  if (explicitKey) return explicitKey;
   if (titleSlug.includes("ocean")) return "ocean-roxo";
   if (titleSlug.includes("mensagem")) return "mensagem-final";
   return String(p?.id || titleSlug || "projeto");
@@ -852,7 +855,7 @@ async function getStreamAdmin() {
 async function saveSiteSettings() {
   const s = {
     id: 1,
-    launch_mode: val("siteLaunchMode") || "locked",
+    launch_mode: val("siteLaunchMode") || "open",
     launch_at: val("siteLaunchAt") || "2026-06-05T20:00:00-03:00",
     hero_title: val("siteHeroTitle"),
     hero_text: val("siteHeroText"),
@@ -1221,16 +1224,16 @@ async function loadSiteSettingsAdmin(){
   if(sb()){ try{ const {data}=await sb().from('site_settings').select('*').eq('id',1).maybeSingle(); if(data) s=data; }catch(e){} }
   if(!Object.keys(s).length){ try{s=JSON.parse(localStorage.getItem(LS_SITE)||'{}')}catch(e){} }
   const set=(id,v)=>{const el=document.getElementById(id); if(el && v!==undefined && v!==null) el.value=v};
-  set('siteLaunchMode', s.launch_mode || 'locked'); set('siteLaunchAt', s.launch_at || '2026-06-05T20:00:00-03:00'); set('siteHeroTitle', s.hero_title||''); set('siteHeroText', s.hero_text||''); set('siteHeroImage', s.hero_image||''); set('siteContactEmail', s.contact_email||'Projeto.barmy@gmail.com'); set('hbArtTitle', s.handbanner_art_title||'Enviar arte do Hand Banner'); set('hbArtText', s.handbanner_art_text||'Envie sua arte seguindo o edital e o manual de submissão.'); const hbChk=document.getElementById('hbArtEnabled'); if(hbChk) hbChk.checked=!!s.handbanner_art_enabled;
+  set('siteLaunchMode', s.launch_mode || 'open'); set('siteLaunchAt', s.launch_at || '2026-06-05T20:00:00-03:00'); set('siteHeroTitle', s.hero_title||''); set('siteHeroText', s.hero_text||''); set('siteHeroImage', s.hero_image||''); set('siteContactEmail', s.contact_email||'projeto.barmy360@gmail.com'); set('hbArtTitle', s.handbanner_art_title||'Enviar arte do Hand Banner'); set('hbArtText', s.handbanner_art_text||'Envie sua arte seguindo o edital e o manual de submissão.'); const hbChk=document.getElementById('hbArtEnabled'); if(hbChk) hbChk.checked=!!s.handbanner_art_enabled;
 }
 const LS_SOLOS_ADMIN='barmy360_solo_members';
-function defaultSolosAdmin(){return ['RM','Jin','SUGA','j-hope','Jimin','V','Jung Kook'].map((name,i)=>({id:String(i+1),member_name:name,title:name,description:'Projeto solo em breve.',status:'planejamento',image_url:'💜',position:i+1}))}
+function defaultSolosAdmin(){return ['RM','Jin','SUGA','j-hope','Jimin','V','Jung Kook'].map((name,i)=>({id:String(i+1),member_name:name,title:name,description:'Projeto solo em breve.',status:'planejamento',image_url:'💜',cover_image:'💜',position:i+1}))}
 async function getSolosAdmin(){ if(sb()){ const {data}=await sb().from('solo_members').select('*').order('position',{ascending:true}); return data && data.length ? data : defaultSolosAdmin(); } const a=JSON.parse(localStorage.getItem(LS_SOLOS_ADMIN)||'[]'); return a.length?a:defaultSolosAdmin(); }
-function clearSoloForm(){ ['soloId','soloMember','soloTitle','soloDescription','soloImage','soloPosition'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=''}); const st=document.getElementById('soloStatus'); if(st) st.value='planejamento'; }
-function editSolo(m){ document.getElementById('soloId').value=m.id||''; document.getElementById('soloMember').value=m.member_name||''; document.getElementById('soloTitle').value=m.title||m.member_name||''; document.getElementById('soloDescription').value=m.description||''; document.getElementById('soloImage').value=m.image_url||''; document.getElementById('soloStatus').value=m.status||'planejamento'; document.getElementById('soloPosition').value=m.position||''; }
-async function saveSoloMember(){ const row={member_name:val('soloMember'), title:val('soloTitle')||val('soloMember'), description:val('soloDescription'), image_url:val('soloImage')||'💜', status:val('soloStatus')||'planejamento', position:Number(val('soloPosition')||0)}; if(!row.member_name) return setMsg('soloMsg','Preencha o nome do membro.'); const id=val('soloId'); if(sb()){ const q=id?sb().from('solo_members').update(row).eq('id',id):sb().from('solo_members').insert(row); const {error}=await q; if(error) return setMsg('soloMsg','Erro: '+error.message); } else { let arr=JSON.parse(localStorage.getItem(LS_SOLOS_ADMIN)||'[]'); if(id) arr=arr.map(x=>String(x.id)===String(id)?{...x,...row}:x); else arr.push({...row,id:Date.now()}); localStorage.setItem(LS_SOLOS_ADMIN,JSON.stringify(arr)); } setMsg('soloMsg','Card salvo.'); clearSoloForm(); loadSolosAdminList(); }
+function clearSoloForm(){ ['soloId','soloMember','soloTitle','soloDescription','soloCoverImage','soloImage','soloPosition'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=''}); const st=document.getElementById('soloStatus'); if(st) st.value='planejamento'; }
+function editSolo(m){ document.getElementById('soloId').value=m.id||''; document.getElementById('soloMember').value=m.member_name||''; document.getElementById('soloTitle').value=m.title||m.member_name||''; document.getElementById('soloDescription').value=m.description||''; document.getElementById('soloCoverImage').value=m.cover_image||m.image_url||''; document.getElementById('soloImage').value=m.image_url||m.cover_image||''; document.getElementById('soloStatus').value=m.status||'planejamento'; document.getElementById('soloPosition').value=m.position||''; }
+async function saveSoloMember(){ const row={member_name:val('soloMember'), title:val('soloTitle')||val('soloMember'), description:val('soloDescription'), cover_image:val('soloCoverImage')||val('soloImage')||'💜', image_url:val('soloImage')||val('soloCoverImage')||'💜', status:val('soloStatus')||'planejamento', position:Number(val('soloPosition')||0)}; if(!row.member_name) return setMsg('soloMsg','Preencha o nome do membro.'); const id=val('soloId'); if(sb()){ const q=id?sb().from('solo_members').update(row).eq('id',id):sb().from('solo_members').insert(row); const {error}=await q; if(error) return setMsg('soloMsg','Erro: '+error.message); } else { let arr=JSON.parse(localStorage.getItem(LS_SOLOS_ADMIN)||'[]'); if(id) arr=arr.map(x=>String(x.id)===String(id)?{...x,...row}:x); else arr.push({...row,id:Date.now()}); localStorage.setItem(LS_SOLOS_ADMIN,JSON.stringify(arr)); } setMsg('soloMsg','Membro salvo.'); clearSoloForm(); loadSolosAdminList(); }
 async function deleteSoloMember(id){ if(!confirm('Excluir este card solo?')) return; if(sb()){ const {error}=await sb().from('solo_members').delete().eq('id',id); if(error) return alert(error.message); } else { let arr=JSON.parse(localStorage.getItem(LS_SOLOS_ADMIN)||'[]').filter(x=>String(x.id)!==String(id)); localStorage.setItem(LS_SOLOS_ADMIN,JSON.stringify(arr)); } loadSolosAdminList(); }
-async function loadSolosAdminList(){ const el=document.getElementById('adminSolosList'); if(!el) return; const rows=await getSolosAdmin(); el.innerHTML=rows.map(m=>`<article class="mini-admin-item"><strong>${escapeHtml(m.title||m.member_name)}</strong><p>${escapeHtml(m.description||'')}</p><small>${escapeHtml(m.status||'planejamento')}</small><div class="admin-actions"><button class="btn small outline" onclick='editSolo(${JSON.stringify(m).replace(/'/g,'&#39;')})'>Editar</button><button class="btn small outline" onclick="deleteSoloMember('${escapeHtml(m.id)}')">Excluir</button></div></article>`).join(''); }
+async function loadSolosAdminList(){ const el=document.getElementById('adminSolosList'); if(!el) return; const rows=await getSolosAdmin(); el.innerHTML=rows.map(m=>{ const cover=m.cover_image||m.image_url||''; const img=(String(cover).startsWith('http')||String(cover).startsWith('assets/')) ? `<img class="admin-thumb" src="${escapeHtml(cover)}" alt="">` : ''; return `<article class="mini-admin-item"><strong>${escapeHtml(m.title||m.member_name)}</strong>${img}<p>${escapeHtml(m.description||'')}</p><small>${escapeHtml(m.status||'planejamento')} • capa do card ${cover?'ok':'não definida'}</small><div class="admin-actions"><button class="btn small outline" onclick='editSolo(${JSON.stringify(m).replace(/'/g,'&#39;')})'>Editar</button><button class="btn small outline" onclick="deleteSoloMember('${escapeHtml(m.id)}')">Excluir</button></div></article>`}).join(''); }
 
 async function saveHandbannerArtSettings(){
   let s={};
@@ -1249,3 +1252,199 @@ async function saveHandbannerArtSettings(){
 async function loadHandbannerSubmissions(){ const el=document.getElementById('adminHBSubmissionsList'); if(!el) return; if(!sb()){ el.innerHTML='<p>Supabase não conectado.</p>'; return; } const {data,error}=await sb().from('handbanner_art_submissions').select('*').order('created_at',{ascending:false}).limit(1000); if(error){ el.innerHTML=`<p>${escapeHtml(error.message)}</p>`; return; } const rows=data||[]; document.getElementById('hbAdminMsg') && (document.getElementById('hbAdminMsg').textContent=rows.length+' envio(s).'); el.innerHTML=rows.length?rows.map(r=>`<article class="mini-admin-item"><strong>${escapeHtml(r.full_name||'Sem nome')}</strong><p>${escapeHtml(r.social_handle||'')} • ${escapeHtml(r.contact_email||r.google_email||'')}</p><p><a class="btn small primary" href="${escapeHtml(r.cloud_link||'#')}" target="_blank">Abrir pasta</a></p><small>${escapeHtml(new Date(r.created_at||Date.now()).toLocaleString('pt-BR'))}</small></article>`).join(''):'<p>Nenhum envio ainda.</p>'; }
 const __oldLoadAdminDataV2 = loadAdminData;
 loadAdminData = async function(){ await __oldLoadAdminDataV2(); await loadSiteSettingsAdmin(); await loadSolosAdminList(); await loadHandbannerSubmissions(); };
+
+/* ===== ADM Projetos Solos por membro - 2026-06-11 ===== */
+const LS_SOLO_PROJECTS_ADMIN = "barmy360_solo_projects";
+
+async function refreshSoloProjectMemberOptions(selectedId = "") {
+  const select = document.getElementById("soloProjectMember");
+  if (!select) return;
+  const members = await getSolosAdmin();
+  select.innerHTML = members.map((m) => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.title || m.member_name || 'Membro')}</option>`).join("");
+  if (selectedId) select.value = selectedId;
+}
+
+async function getSoloProjectsAdmin() {
+  if (sb()) {
+    const { data } = await sb().from("solo_projects").select("*").order("position", { ascending: true }).order("created_at", { ascending: true });
+    return data || [];
+  }
+  return JSON.parse(localStorage.getItem(LS_SOLO_PROJECTS_ADMIN) || "[]").sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
+}
+
+function clearSoloProjectForm() {
+  ["soloProjectId", "soloProjectTitle", "soloProjectDescription", "soloProjectImage", "soloProjectLink", "soloProjectPosition"].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ""; });
+  const st = document.getElementById("soloProjectStatus"); if (st) st.value = "planejamento";
+}
+
+function editSoloProject(p) {
+  document.getElementById("soloProjectId").value = p.id || "";
+  document.getElementById("soloProjectMember").value = p.solo_member_id || "";
+  document.getElementById("soloProjectTitle").value = p.title || "";
+  document.getElementById("soloProjectDescription").value = p.description || "";
+  document.getElementById("soloProjectImage").value = p.image_url || "";
+  document.getElementById("soloProjectLink").value = p.link_url || "";
+  document.getElementById("soloProjectStatus").value = p.status || "planejamento";
+  document.getElementById("soloProjectPosition").value = p.position || "";
+}
+
+async function saveSoloProject() {
+  const row = {
+    solo_member_id: val("soloProjectMember"),
+    title: val("soloProjectTitle"),
+    description: val("soloProjectDescription"),
+    image_url: val("soloProjectImage") || "✨",
+    cover_image: val("soloProjectImage") || "✨",
+    link_url: val("soloProjectLink"),
+    status: val("soloProjectStatus") || "planejamento",
+    position: Number(val("soloProjectPosition") || 0),
+  };
+  if (!row.solo_member_id) return setMsg("soloProjectMsg", "Selecione o membro.");
+  if (!row.title) return setMsg("soloProjectMsg", "Preencha o título do projeto.");
+  const id = val("soloProjectId");
+  if (sb()) {
+    const q = id ? sb().from("solo_projects").update(row).eq("id", id) : sb().from("solo_projects").insert(row);
+    const { error } = await q;
+    if (error) return setMsg("soloProjectMsg", "Erro: " + error.message + " — rode o SQL atualizado do ZIP.");
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_SOLO_PROJECTS_ADMIN) || "[]");
+    if (id) arr = arr.map((x) => String(x.id) === String(id) ? { ...x, ...row } : x);
+    else arr.push({ ...row, id: Date.now() });
+    localStorage.setItem(LS_SOLO_PROJECTS_ADMIN, JSON.stringify(arr));
+  }
+  setMsg("soloProjectMsg", "Projeto do membro salvo.");
+  clearSoloProjectForm();
+  await loadSoloProjectsAdminList();
+}
+
+async function deleteSoloProject(id) {
+  if (!confirm("Excluir este projeto solo?")) return;
+  if (sb()) {
+    const { error } = await sb().from("solo_projects").delete().eq("id", id);
+    if (error) return alert(error.message);
+  } else {
+    const arr = JSON.parse(localStorage.getItem(LS_SOLO_PROJECTS_ADMIN) || "[]").filter((x) => String(x.id) !== String(id));
+    localStorage.setItem(LS_SOLO_PROJECTS_ADMIN, JSON.stringify(arr));
+  }
+  await loadSoloProjectsAdminList();
+}
+
+async function loadSoloProjectsAdminList() {
+  await refreshSoloProjectMemberOptions(document.getElementById("soloProjectMember")?.value || "");
+  const el = document.getElementById("adminSoloProjectsList");
+  if (!el) return;
+  const [projects, members] = await Promise.all([getSoloProjectsAdmin(), getSolosAdmin()]);
+  const memberName = (id) => (members.find((m) => String(m.id) === String(id)) || {}).title || (members.find((m) => String(m.id) === String(id)) || {}).member_name || "Membro";
+  el.innerHTML = projects.length ? projects.map((p) => `<article class="mini-admin-item">
+    <strong>${escapeHtml(p.title || 'Projeto')}</strong>
+    ${(p.cover_image||p.image_url) && (String(p.cover_image||p.image_url).startsWith('http')||String(p.cover_image||p.image_url).startsWith('assets/')) ? `<img class="admin-thumb" src="${escapeHtml(p.cover_image||p.image_url)}" alt="">` : ''}
+    <p>${escapeHtml(p.description || '')}</p>
+    <small>${escapeHtml(memberName(p.solo_member_id))} • ${escapeHtml(p.status || 'planejamento')} • ordem ${Number(p.position || 0)}</small>
+    <div class="admin-actions">
+      ${p.link_url ? `<a class="btn small primary" href="${escapeHtml(p.link_url)}" target="_blank" rel="noopener">Abrir</a>` : ''}
+      <button class="btn small outline" onclick='editSoloProject(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
+      <button class="btn small outline" onclick="deleteSoloProject('${escapeHtml(p.id)}')">Excluir</button>
+    </div>
+  </article>`).join("") : "<p>Nenhum projeto solo cadastrado ainda.</p>";
+}
+
+const __oldLoadAdminDataSolosProjects = loadAdminData;
+loadAdminData = async function(){ await __oldLoadAdminDataSolosProjects(); await loadSoloProjectsAdminList(); };
+
+/* ===== Correções finais ADM / contador / status - 2026-06-11 ===== */
+function projectStatusLabelAdmin(status){
+  const map = {
+    fase_envio: "Em fase de envio",
+    analise: "Em análise",
+    planejamento: "Em planejamento",
+    em_votacao: "Em votação",
+    aprovado: "Aprovado",
+    finalizado: "Finalizado",
+    nao_aprovado: "Não aprovado"
+  };
+  return map[status] || status || "Em planejamento";
+}
+function projectStatusSelectAdmin(p){
+  const statuses = ["fase_envio","analise","planejamento","em_votacao","aprovado","finalizado","nao_aprovado"];
+  return `<select class="admin-inline-select" onchange="updateProjectStatus('${escapeHtml(p.id)}', this.value)">${statuses.map(s=>`<option value="${s}" ${String(p.status||'')===s?'selected':''}>${projectStatusLabelAdmin(s)}</option>`).join("")}</select>`;
+}
+async function updateProjectStatus(id, status){
+  const patch = { status, voting_open: status === "em_votacao" };
+  if(sb()){
+    const { error } = await sb().from("projects").update(patch).eq("id", id);
+    if(error) return alert("Erro ao alterar status: " + error.message);
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_PROJECTS) || "[]");
+    arr = arr.map(p => String(p.id) === String(id) ? { ...p, ...patch } : p);
+    localStorage.setItem(LS_PROJECTS, JSON.stringify(arr));
+  }
+  setMsg("projectMsg", "Status atualizado.");
+  await loadAdminData();
+}
+async function toggleVoting(id, open){
+  const patch = { voting_open: !!open, status: open ? "em_votacao" : "finalizado" };
+  if(sb()){
+    const { error } = await sb().from("projects").update(patch).eq("id", id);
+    if(error) return alert("Erro ao abrir/fechar projeto: " + error.message);
+    try {
+      const projects = await getProjectsAdmin();
+      const p = projects.find(x => String(x.id) === String(id));
+      const key = p ? projectVotingKeyAdmin(p) : "";
+      if(key) await sb().from("votacoes").update({ status: open ? "aberta" : "fechada" }).eq("project_key", key);
+    } catch(e) {}
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_PROJECTS) || "[]");
+    arr = arr.map(p => String(p.id) === String(id) ? { ...p, ...patch } : p);
+    localStorage.setItem(LS_PROJECTS, JSON.stringify(arr));
+    let vs = JSON.parse(localStorage.getItem(LS_VOTACOES) || "[]");
+    const proj = arr.find(p => String(p.id) === String(id));
+    const key = proj ? projectVotingKeyAdmin(proj) : "";
+    vs = vs.map(v => String(v.project_key || "") === String(key) ? { ...v, status: open ? "aberta" : "fechada" } : v);
+    localStorage.setItem(LS_VOTACOES, JSON.stringify(vs));
+  }
+  setMsg("projectMsg", open ? "Projeto aberto para votação." : "Projeto fechado/finalizado.");
+  await loadAdminData();
+}
+const __barmyOldSaveProject = saveProject;
+saveProject = async function(){
+  const status = val("projectStatus") || "planejamento";
+  const open = document.getElementById("projectVotingOpen");
+  if(open) open.checked = status === "em_votacao" ? true : !!open.checked;
+  await __barmyOldSaveProject();
+};
+async function renderProjectsAdminFunctional(){
+  const projectsList = document.getElementById("adminProjectsList");
+  if(!projectsList) return;
+  const projects = await getProjectsAdmin();
+  projectsList.innerHTML = projects.length ? projects.map((p)=>`<article class="mini-admin-item admin-project-row">
+    <div class="admin-project-main">
+      <strong>${escapeHtml(p.title || "Projeto")}</strong>
+      ${p.image_url && String(p.image_url).startsWith("http") ? `<img class="admin-thumb" src="${escapeHtml(p.image_url)}" alt="">` : ""}
+      <p>${escapeHtml(p.description || "")}</p>
+      <small>${Number(p.votes_count || 0).toLocaleString("pt-BR")} votos • ${p.voting_open ? "votação aberta" : "votação fechada"}</small>
+    </div>
+    <div class="admin-status-box">
+      <label>Status do projeto</label>
+      ${projectStatusSelectAdmin(p)}
+    </div>
+    <div class="admin-actions">
+      <button class="btn small outline" onclick='editProject(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Editar</button>
+      <button class="btn small primary" onclick='manageProjectVoting(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Votação</button>
+      <button class="btn small outline" onclick="toggleVoting('${escapeHtml(p.id)}', ${!p.voting_open})">${p.voting_open ? "Fechar votação" : "Abrir votação"}</button>
+      <button class="btn small outline" onclick="deleteProject('${escapeHtml(p.id)}')">Excluir</button>
+    </div>
+  </article>`).join("") : "<p>Nenhum projeto cadastrado ainda.</p>";
+}
+const __barmyLoadAdminFinal = loadAdminData;
+loadAdminData = async function(){
+  await __barmyLoadAdminFinal();
+  await renderProjectsAdminFunctional();
+  const mode = document.getElementById("siteLaunchMode"); if(mode && !mode.value) mode.value = "open";
+};
+
+const __barmyLoadSiteSettingsAdminFinal = loadSiteSettingsAdmin;
+loadSiteSettingsAdmin = async function(){
+  await __barmyLoadSiteSettingsAdminFinal();
+  const mode=document.getElementById('siteLaunchMode'); if(mode && (!mode.value || mode.value==='locked')) mode.value='open';
+  const email=document.getElementById('siteContactEmail'); if(email && !email.value) email.value='projeto.barmy360@gmail.com';
+};

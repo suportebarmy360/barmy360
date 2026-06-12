@@ -12,9 +12,9 @@ const DEFAULT_HANDBANNER_PHRASES_PROJECT = {
   project_key: "handbanner-frases",
   slug: "handbanner-frases",
   title: "HAND BANNER - Envio de frases",
-  description: "Envie sua frase para participar da seleção do Hand Banner.",
-  details: "As frases enviadas serão avaliadas pelas ADMs. Depois, as aprovadas poderão entrar em votação.",
-  status: "Finalizado",
+  description: "A fase de envio de frases foi encerrada. As frases enviadas ficam salvas para análise das ADMs.",
+  details: "O formulário público de envio de frases foi fechado. Acompanhe as próximas fases pela página de projetos.",
+  status: "finalizado",
   image_url: "assets/images/b360-iso.png",
   published: true,
   is_default: true,
@@ -28,16 +28,16 @@ const DEFAULT_HANDBANNER_ARTS_PROJECT = {
   title: "HAND BANNER - Envio de artes",
   description: "Envie sua arte seguindo o edital e o manual de submissão.",
   details: "Área para envio de links do Drive/Nuvem com os arquivos do design. O envio usa login Google e limite de até 3 envios por conta.",
-  status: "fase_envio",
+  status: "fase de envio",
   image_url: "assets/images/b360-iso.png",
   published: true,
   is_default: true,
   project_type: "artes"
 };
 
-// O envio de frases é um projeto fixo e separado do envio de artes.
-// O envio de artes só aparece na página Projetos quando for publicado pelo painel ADM.
-const defaultProjects = [DEFAULT_HANDBANNER_PHRASES_PROJECT];
+// Não criar projetos fixos automaticamente na listagem.
+// Todos os cards de projetos devem vir do Supabase/painel ADM para evitar duplicação.
+const defaultProjects = [];
 
 function fallbackPosts() {
   return JSON.parse(localStorage.getItem(LS_POSTS) || "[]");
@@ -88,9 +88,7 @@ async function getProjects() {
     projects = JSON.parse(localStorage.getItem(LS_PROJECTS) || "[]");
   }
 
-  const list = projects.length ? projects : defaultProjects;
-  const hasPhraseProject = list.some((p) => projectIsHandbannerPhrases(p));
-  return hasPhraseProject ? list : [DEFAULT_HANDBANNER_PHRASES_PROJECT, ...list];
+  return projects.length ? projects : defaultProjects;
 }
 
 async function getVotacoes() {
@@ -137,25 +135,21 @@ function projectTitleSlug(p){
 
 function projectVotingKey(p) {
   const titleSlug = projectTitleSlug(p);
-  const joined = titleSlug.replace(/-/g, "");
   if (projectIsHandbannerArts(p)) return "handbanner-artes";
   if (projectIsHandbannerPhrases(p)) return "handbanner-frases";
-  if (joined.includes("handbanner")) return "handbanner";
   return String(p?.project_key || p?.slug || p?.id || titleSlug);
 }
 
 function projectIsHandbannerPhrases(p) {
-  const titleSlug = projectTitleSlug(p);
-  const joined = titleSlug.replace(/-/g, "");
-  const key = String(p?.project_key || p?.slug || p?.id || "").toLowerCase();
-  return key.includes("frase") || titleSlug.includes("frase") || joined.includes("enviofrases") || joined.includes("handbannerfrases");
+  const key = String(p?.project_key || p?.slug || p?.id || "").toLowerCase().trim();
+  const type = String(p?.project_type || "").toLowerCase().trim();
+  return type === "frases" || key === "handbanner-frases" || key === "envio-frases";
 }
 
 function projectIsHandbannerArts(p) {
-  const titleSlug = projectTitleSlug(p);
-  const joined = titleSlug.replace(/-/g, "");
-  const key = String(p?.project_key || p?.slug || p?.id || "").toLowerCase();
-  return key.includes("arte") || titleSlug.includes("arte") || titleSlug.includes("design") || joined.includes("envioartes") || joined.includes("handbannerartes");
+  const key = String(p?.project_key || p?.slug || p?.id || "").toLowerCase().trim();
+  const type = String(p?.project_type || "").toLowerCase().trim();
+  return type === "artes" || key === "handbanner-artes" || key === "envio-artes";
 }
 
 function projectIsHandbanner(p) {
@@ -163,9 +157,7 @@ function projectIsHandbanner(p) {
 }
 
 function projectDisplayStatus(p) {
-  if (projectIsHandbannerPhrases(p)) return p?.status || "finalizado";
-  if (projectIsHandbannerArts(p)) return p?.status || "fase_envio";
-  return p?.status || "em_votacao";
+  return p?.status || (projectIsHandbannerPhrases(p) || projectIsHandbannerArts(p) ? "fase_envio" : "em_votacao");
 }
 
 function projectDetailHref(p) {
@@ -181,7 +173,7 @@ async function findHandbannerPhraseProject() {
     const byId = projects.find((x) => String(x.id) === String(id));
     if (byId && !projectIsHandbannerArts(byId)) return byId;
   }
-  return projects.find((x) => projectIsHandbannerPhrases(x)) || DEFAULT_HANDBANNER_PHRASES_PROJECT;
+  return projects.find((x) => projectIsHandbannerPhrases(x)) || null;
 }
 
 async function findHandbannerArtProject() {
@@ -198,24 +190,11 @@ function phraseSubmissionFormMarkup() {
   return `<section id="phraseFormSection" class="section phrase-inline-section">
     <article class="admin-card phrase-form-card glow-card">
       <div class="section-heading compact-heading">
-        <p class="kicker">COLETA DE FRASES</p>
-        <h2>Envie sua frase</h2>
-        <p>Preencha o formulário abaixo para enviar sua sugestão de frase para análise das ADMs.</p>
+        <p class="kicker">COLETA ENCERRADA</p>
+        <h2>Envio de frases finalizado</h2>
+        <p>A fase de envio de frases já foi encerrada. O formulário público não está mais disponível.</p>
       </div>
-      <form id="phraseForm">
-        <label for="phraseText">Frase</label>
-        <textarea id="phraseText" maxlength="180" placeholder="Digite a frase para o Hand Banner" required></textarea>
-        <label for="phraseExplanation">Explicação da frase</label>
-        <textarea id="phraseExplanation" maxlength="800" placeholder="Explique o significado, intenção ou contexto da frase" required></textarea>
-        <label for="phraseName">Nome</label>
-        <input id="phraseName" maxlength="80" placeholder="Nome" required>
-        <label for="phraseSocial">@ e rede social</label>
-        <input id="phraseSocial" maxlength="120" placeholder="@ e rede social. Ex: @barmy360 no X/Twitter" required>
-        <label for="phraseEmail">E-mail</label>
-        <input id="phraseEmail" type="email" maxlength="120" placeholder="E-mail para contato" required>
-        <button class="btn primary" type="submit">Enviar frase</button>
-        <p id="phraseFormMsg" class="form-msg"></p>
-      </form>
+      <div class="hero-actions"><a class="btn primary" href="projetos.html">Voltar para projetos</a></div>
     </article>
   </section>`;
 }
@@ -229,23 +208,22 @@ function handbannerPhraseProjectMarkup(p) {
         <p class="kicker">PROJETO SHOWS</p>
         <span class="status ${statusClass(projectDisplayStatus(p))}">${statusText(projectDisplayStatus(p))}</span>
         <h1>${escapeHtml(p.title || "Hand Banner - Envio de frases")}</h1>
-        <p>${escapeHtml(p.description || "Envie sua frase para participar da seleção do Hand Banner.")}</p>
+        <p>${escapeHtml(p.description || "Envio de frases encerrado. Acompanhe as próximas etapas pela página de projetos.")}</p>
         <div class="project-detail-meta">
           <span class="meta-pill">💜 BARMY360</span>
-          <span class="meta-pill">Finalizado</span>
+          <span class="meta-pill">Envio encerrado</span>
         </div>
         <div class="hero-actions">
-          <a class="btn primary" href="envio-frases.html">Enviar frase</a>
-          <a class="btn outline back-link" href="projetos.html">← Voltar para projetos</a>
+          <a class="btn primary" href="projetos.html">← Voltar para projetos</a>
         </div>
       </div>
     </div>
   </section>
 
   <section class="project-detail-grid section">
-    <article class="detail-box glow-card"><h2>📌 Sobre o projeto</h2><p>${escapeHtml(p.description || "Projeto de envio de frases para o Hand Banner.")}</p></article>
-    <article class="detail-box glow-card"><h2>✨ Dinâmica</h2><p>${escapeHtml(p.details || "As frases enviadas serão avaliadas pelas ADMs. Depois, as aprovadas poderão entrar em votação.")}</p></article>
-    <article class="detail-box glow-card"><h2>⚠️ Avisos importantes</h2><ul><li>Envie apenas uma frase por participação.</li><li>Não envie frases desrespeitosas, com shipp ou conteúdo sensível.</li><li>O formulário de envio fica em uma página separada.</li></ul></article>
+    <article class="detail-box glow-card"><h2>📌 Sobre o projeto</h2><p>${escapeHtml(p.description || "Projeto de envio de frases para o Hand Banner. Fase encerrada.")}</p></article>
+    <article class="detail-box glow-card"><h2>✨ Dinâmica</h2><p>${escapeHtml(p.details || "O envio de frases foi encerrado. As frases recebidas ficam salvas para análise das ADMs.")}</p></article>
+    <article class="detail-box glow-card"><h2>⚠️ Avisos importantes</h2><ul><li>O formulário público de frases está fechado.</li><li>As frases já enviadas ficam registradas para análise.</li><li>Acompanhe as próximas etapas pela página de projetos.</li></ul></article>
   </section>`;
 }
 
@@ -284,7 +262,11 @@ async function loadHandbannerPhraseProjectPage() {
   const root = document.getElementById("handbannerPhraseProjectRoot") || document.getElementById("handbannerProjectRoot");
   if (!root) return;
   const p = await findHandbannerPhraseProject();
-  root.innerHTML = handbannerPhraseProjectMarkup(p || DEFAULT_HANDBANNER_PHRASES_PROJECT);
+  if (!p) {
+    root.innerHTML = phraseSubmissionFormMarkup();
+    return;
+  }
+  root.innerHTML = handbannerPhraseProjectMarkup(p);
   initPhraseForm();
 }
 
@@ -443,6 +425,16 @@ async function loadVotingCampaigns() {
   wrap.innerHTML = blocks.join("");
 }
 
+function getBarmyVoterFingerprint() {
+  const key = "barmy360_voter_fingerprint";
+  let value = localStorage.getItem(key);
+  if (!value) {
+    value = "voter_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2);
+    localStorage.setItem(key, value);
+  }
+  return value;
+}
+
 async function voteOption(opcaoId, votacaoId) {
   if (!opcaoId || !votacaoId) return;
 
@@ -450,14 +442,25 @@ async function voteOption(opcaoId, votacaoId) {
     const { error } = await BARMY360_SUPABASE.rpc("registrar_voto_opcao", {
       opcao: String(opcaoId),
       votacao: String(votacaoId),
+      voter_fingerprint: getBarmyVoterFingerprint(),
     });
 
     if (error) {
       console.error(error);
-      alert("Erro ao registrar voto: " + error.message);
+      alert(error.message || "Erro ao registrar voto.");
       return;
     }
   } else {
+    const browserKey = `barmy360_votes_${votacaoId}`;
+    const voted = JSON.parse(localStorage.getItem(browserKey) || "[]");
+    if (voted.includes(String(opcaoId))) {
+      alert("Você já votou nessa opção.");
+      return;
+    }
+    if (voted.length >= 3) {
+      alert("Limite de 3 opções por votação atingido.");
+      return;
+    }
     let opcoes = JSON.parse(localStorage.getItem(LS_OPCOES) || "[]");
     opcoes = opcoes.map((o) =>
       String(o.id) === String(opcaoId)
@@ -465,6 +468,7 @@ async function voteOption(opcaoId, votacaoId) {
         : o
     );
     localStorage.setItem(LS_OPCOES, JSON.stringify(opcoes));
+    localStorage.setItem(browserKey, JSON.stringify([...voted, String(opcaoId)]));
   }
 
   alert("Voto registrado 💜");
@@ -533,7 +537,17 @@ async function loadProjectDetail() {
         <li>Respeitar as regras oficiais do evento e do estádio.</li>
       </ul>
     </article>
+  </section>
+
+  <section class="section voting-campaign glow-card">
+    <div class="section-heading compact-heading">
+      <p class="kicker">VOTAÇÃO DO PROJETO</p>
+      <h2>Opções para votação</h2>
+      <p id="votingStatusText">Carregando votação vinculada a este projeto...</p>
+    </div>
+    <div id="votingOptionsGrid" class="project-grid voting-options-grid" data-voting-grid data-votacao-project="${escapeAttr(projectVotingKey(p))}"></div>
   </section>`;
+  if (typeof loadVotingOptions === "function") setTimeout(loadVotingOptions, 0);
 }
 
 
@@ -795,7 +809,7 @@ async function applySiteSettings() {
     document.querySelector(".hero-text").textContent = s.hero_text;
   }
 
-  document.querySelectorAll('a[href^="mailto:Projeto.barmy@gmail.com"]').forEach((a) => {
+  document.querySelectorAll('a[href^="mailto:projeto.barmy360@gmail.com"]').forEach((a) => {
     if (s.contact_email) a.href = "mailto:" + s.contact_email;
   });
 }
@@ -938,7 +952,7 @@ async function loadSchedulePage() {
 
 
 const LS_SOLOS = "barmy360_solo_members";
-const defaultSoloMembers = ["RM","Jin","SUGA","j-hope","Jimin","V","Jung Kook"].map((name, i) => ({ id: String(i+1), member_name: name, title: name, description: "Projeto solo em breve.", status: "planejamento", image_url: "💜", position: i+1 }));
+const defaultSoloMembers = ["RM","Jin","SUGA","j-hope","Jimin","V","Jung Kook"].map((name, i) => ({ id: String(i+1), member_name: name, title: name, description: "Projeto solo em breve.", status: "planejamento", image_url: "💜", cover_image: "💜", position: i+1 }));
 async function getSoloMembers(){
   let rows=[];
   if(window.BARMY360_SUPABASE){
@@ -948,9 +962,10 @@ async function getSoloMembers(){
   return rows.length ? rows : defaultSoloMembers;
 }
 function soloCardMarkup(m){
-  const img = m.image_url || "💜";
+  const img = m.cover_image || m.image_url || "💜";
   const image = String(img).startsWith("http") ? `<div class="project-image image-cover ratio-16-9" style="background-image:url('${escapeAttr(img)}')"></div>` : `<div class="project-image purple-bg ratio-16-9">${escapeHtml(img)}</div>`;
-  return `<article class="project-card glow-card">${image}<span class="status ${statusClass(m.status || 'planejamento')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span><h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3><p>${escapeHtml(m.description || 'Projeto solo em breve.')}</p></article>`;
+  const href = `projeto-solo-detalhe.html?id=${encodeURIComponent(m.id || m.member_name || m.title || '')}`;
+  return `<a class="project-card glow-card solo-member-card-link" href="${escapeAttr(href)}">${image}<span class="status ${statusClass(m.status || 'planejamento')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span><h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3><p>${escapeHtml(m.description || 'Projeto solo em breve.')}</p></a>`;
 }
 async function loadSoloMembersPage(){
   const grid = document.getElementById("soloMembersGrid");
@@ -977,3 +992,83 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSchedulePage();
   loadSoloMembersPage();
 });
+
+/* ===== Projetos Solos com páginas por membro - 2026-06-11 ===== */
+const LS_SOLO_PROJECTS = "barmy360_solo_projects";
+
+function soloMemberHref(m) {
+  return `projeto-solo-detalhe.html?id=${encodeURIComponent(m.id || m.member_name || m.title)}`;
+}
+
+function soloImageMarkupFromValue(img, cls = "project-image") {
+  const value = img || "💜";
+  if (String(value).startsWith("http") || String(value).startsWith("assets/")) {
+    return `<div class="${cls} image-cover ratio-16-9" style="background-image:url('${escapeAttr(value)}')"></div>`;
+  }
+  return `<div class="${cls} purple-bg ratio-16-9">${escapeHtml(value)}</div>`;
+}
+
+async function getSoloProjects(memberId) {
+  let rows = [];
+  if (window.BARMY360_SUPABASE) {
+    let query = BARMY360_SUPABASE.from("solo_projects").select("*").order("position", { ascending: true }).order("created_at", { ascending: true });
+    if (memberId) query = query.eq("solo_member_id", memberId);
+    const { data } = await query;
+    rows = data || [];
+  } else {
+    rows = JSON.parse(localStorage.getItem(LS_SOLO_PROJECTS) || "[]");
+    if (memberId) rows = rows.filter((p) => String(p.solo_member_id) === String(memberId));
+    rows.sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
+  }
+  return rows;
+}
+
+soloCardMarkup = function(m) {
+  return `<article class="project-card glow-card">
+    <a href="${soloMemberHref(m)}">${soloImageMarkupFromValue(m.cover_image || m.image_url, "project-image")}</a>
+    <span class="status ${statusClass(m.status || 'planejamento')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span>
+    <h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3>
+    <p>${escapeHtml(m.description || 'Projeto solo em breve.')}</p>
+    <a class="btn small primary" href="${soloMemberHref(m)}">Ver projetos</a>
+  </article>`;
+};
+
+function soloProjectCardMarkup(p) {
+  return `<article class="project-card glow-card">
+    ${soloImageMarkupFromValue(p.cover_image || p.image_url, "project-image")}
+    <span class="status ${statusClass(p.status || 'planejamento')}">${escapeHtml(statusText(p.status || 'planejamento') || 'EM BREVE')}</span>
+    <h3>${escapeHtml(p.title || 'Projeto')}</h3>
+    <p>${escapeHtml(p.description || '')}</p>
+    ${p.link_url ? `<a class="btn small outline" href="${escapeAttr(p.link_url)}" target="_blank" rel="noopener">Abrir projeto</a>` : ``}
+  </article>`;
+}
+
+async function loadSoloDetailPage() {
+  const root = document.getElementById("soloDetailRoot");
+  if (!root) return;
+  const id = new URLSearchParams(location.search).get("id");
+  const members = await getSoloMembers();
+  const member = members.find((m) => String(m.id) === String(id) || String(m.member_name) === String(id) || String(m.title) === String(id)) || members[0];
+  if (!member) return;
+  const projects = await getSoloProjects(member.id);
+  root.innerHTML = `<section class="project-detail-hero solo-member-hero">
+    <div class="project-detail-card glow-card">
+      ${soloImageMarkupFromValue(member.image_url || member.cover_image, "project-detail-image")}
+      <div class="project-detail-info">
+        <p class="kicker">PROJETO SOLO</p>
+        <span class="status ${statusClass(member.status || 'planejamento')}">${escapeHtml(statusText(member.status || 'planejamento') || 'EM BREVE')}</span>
+        <h1>${escapeHtml(member.title || member.member_name || 'Membro')}</h1>
+        <p>${escapeHtml(member.description || 'Página para organizar projetos solos deste membro.')}</p>
+        <div class="hero-actions"><a class="btn outline" href="projetos-solos.html">← Voltar para Projetos Solos</a></div>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-heading compact-heading"><p class="kicker">CARDS DE PROJETOS</p><h2>Projetos cadastrados</h2><p>As ADMs podem adicionar, editar e remover esses cards pelo painel.</p></div>
+    <div class="project-grid solo-projects-grid">
+      ${projects.length ? projects.map(soloProjectCardMarkup).join("") : `<article class="project-card glow-card"><div class="project-image purple-bg ratio-16-9">✨</div><span class="status planning">EM BREVE</span><h3>Nenhum projeto cadastrado ainda</h3><p>Quando as ADMs cadastrarem projetos para este membro, eles aparecerão aqui.</p></article>`}
+    </div>
+  </section>`;
+}
+
+document.addEventListener("DOMContentLoaded", loadSoloDetailPage);

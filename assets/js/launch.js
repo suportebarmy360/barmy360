@@ -24,4 +24,4 @@ async function updateLaunch(){
   const note=document.querySelector('.launch-note');
   if(note){ note.innerHTML = mode === 'locked' ? 'Liberação manual pelo <strong>Painel ADM</strong>' : 'Liberação automática em <strong>05/06/2026 às 20:00</strong>'; }
 }
-document.addEventListener('DOMContentLoaded',()=>{updateLaunch(); setInterval(updateLaunch,5000);});
+document.addEventListener('DOMContentLoaded',()=>{updateLaunch(); setInterval(updateLaunch());});
