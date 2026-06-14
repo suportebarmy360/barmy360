@@ -1360,12 +1360,13 @@ function projectStatusLabelAdmin(status){
     em_votacao: "Em votação",
     aprovado: "Aprovado",
     finalizado: "Finalizado",
-    nao_aprovado: "Não aprovado"
+    nao_aprovado: "Não aprovado",
+    em_colaboracao: "Em Colaboração"
   };
   return map[status] || status || "Em planejamento";
 }
 function projectStatusSelectAdmin(p){
-  const statuses = ["fase_envio","analise","planejamento","em_votacao","aprovado","finalizado","nao_aprovado"];
+  const statuses = ["fase_envio","analise","planejamento","em_votacao","aprovado","finalizado","nao_aprovado", "Em colaboração"];
   return `<select class="admin-inline-select" onchange="updateProjectStatus('${escapeHtml(p.id)}', this.value)">${statuses.map(s=>`<option value="${s}" ${String(p.status||'')===s?'selected':''}>${projectStatusLabelAdmin(s)}</option>`).join("")}</select>`;
 }
 async function updateProjectStatus(id, status){
