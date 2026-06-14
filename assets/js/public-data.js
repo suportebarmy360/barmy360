@@ -953,7 +953,7 @@ async function loadSchedulePage() {
 
 
 const LS_SOLOS = "barmy360_solo_members";
-const defaultSoloMembers = ["RM","Jin","SUGA","j-hope","Jimin","V","Jung Kook"].map((name, i) => ({ id: String(i+1), member_name: name, title: name, description: "Projeto solo em breve.", status: "planejamento", image_url: "💜", cover_image: "💜", position: i+1 }));
+const defaultSoloMembers = ["RM","Jin","SUGA","j-hope","Jimin","V","Jung Kook"].map((name, i) => ({ id: String(i+1), member_name: name, title: name, description: "Projeto individual em breve.", status: "Em colaboração", image_url: "💜", cover_image: "💜", position: i+1 }));
 async function getSoloMembers(){
   let rows=[];
   if(window.BARMY360_SUPABASE){
@@ -966,7 +966,7 @@ function soloCardMarkup(m){
   const img = m.cover_image || m.image_url || "💜";
   const image = String(img).startsWith("http") ? `<div class="project-image image-cover ratio-16-9" style="background-image:url('${escapeAttr(img)}')"></div>` : `<div class="project-image purple-bg ratio-16-9">${escapeHtml(img)}</div>`;
   const href = `projeto-solo-detalhe.html?id=${encodeURIComponent(m.id || m.member_name || m.title || '')}`;
-  return `<a class="project-card glow-card solo-member-card-link" href="${escapeAttr(href)}">${image}<span class="status ${statusClass(m.status || 'planejamento')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span><h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3><p>${escapeHtml(m.description || 'Projeto solo em breve.')}</p></a>`;
+  return `<a class="project-card glow-card solo-member-card-link" href="${escapeAttr(href)}">${image}<span class="status ${statusClass(m.status || 'em colaboração')}">${escapeHtml(statusText(m.status || 'em colaboração') || 'EM BREVE')}</span><h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3><p>${escapeHtml(m.description || 'Projeto individual em colaboração.')}</p></a>`;
 }
 async function loadSoloMembersPage(){
   const grid = document.getElementById("soloMembersGrid");
@@ -1029,7 +1029,7 @@ soloCardMarkup = function(m) {
     <a href="${soloMemberHref(m)}">${soloImageMarkupFromValue(m.cover_image || m.image_url, "project-image")}</a>
     <span class="status ${statusClass(m.status || 'planejamento')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span>
     <h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3>
-    <p>${escapeHtml(m.description || 'Projeto solo em breve.')}</p>
+    <p>${escapeHtml(m.description || 'Projeto individual - Em colaboração.')}</p>
     <a class="btn small primary" href="${soloMemberHref(m)}">Ver projetos</a>
   </article>`;
 };
