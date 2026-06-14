@@ -839,7 +839,8 @@ function statusText(s) {
     finalizado: "FINALIZADO",
     fechado: "FINALIZADO",
     nao_aprovado: "NÃO APROVADO",
-    "não_aprovado": "NÃO APROVADO"
+    "não_aprovado": "NÃO APROVADO",
+    em_colaboracao: "EM COLABORAÇÃO"
   };
   return map[String(s || "").toLowerCase()] || "EM VOTAÇÃO";
 }
