@@ -88,6 +88,7 @@
           <option value="aprovado">Aprovado</option>
           <option value="finalizado">Finalizado</option>
           <option value="nao_aprovado">Não aprovado</option>
+          <option value= "em_colaboração">Em colaboração"</option>
         </select>
         <label class="check-row"><input id="projectVotingOpen" type="checkbox" checked> Votação aberta para este projeto</label>
         <button class="btn primary" onclick="saveProject()">Salvar projeto</button>
@@ -105,11 +106,15 @@
           <option value="aberta">Aberta</option>
           <option value="fechada">Fechada</option>
           <option value="rascunho">Rascunho</option>
+          <option value="em_colaboração">Em Colaboração</option>
+          
         </select>
         <select id="simpleVotePhase">
           <option value="fase1">Fase 1</option>
           <option value="semifinal">Semifinal</option>
           <option value="final">Final</option>
+          <option value="Fase_unica">Fase Única</option>
+          
         </select>
         <label class="check-row"><input id="simpleVoteRanking" type="checkbox" checked> Mostrar contador/ranking para o público</label>
         <button class="btn primary" onclick="saveSimpleProjectVoting()">Salvar votação deste projeto</button>
@@ -249,7 +254,7 @@
 
     <div id="tab-solos" class="admin-tab-panel hidden">
       <section class="admin-card">
-        <h2>Projetos Solos</h2>
+        <h2>Projetos Individuais</h2>
         <p class="admin-help">Edite o card do membro e a imagem que aparece dentro da página individual.</p>
         <input id="soloId" type="hidden">
         <input id="soloMember" placeholder="Membro. Ex: RM">
