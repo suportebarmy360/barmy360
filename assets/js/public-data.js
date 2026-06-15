@@ -1027,7 +1027,7 @@ async function getSoloProjects(memberId) {
 soloCardMarkup = function(m) {
   return `<article class="project-card glow-card">
     <a href="${soloMemberHref(m)}">${soloImageMarkupFromValue(m.cover_image || m.image_url, "project-image")}</a>
-    <span class="status ${statusClass(m.status || 'planejamento')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span>
+    <span class="status ${statusClass(m.status || 'em colaboração')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span>
     <h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3>
     <p>${escapeHtml(m.description || 'Projeto individual - Em colaboração.')}</p>
     <a class="btn small primary" href="${soloMemberHref(m)}">Ver projetos</a>
