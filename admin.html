@@ -266,7 +266,7 @@
         <label>Foto/imagem dentro da página do membro</label>
         <input id="soloImage" placeholder="URL, upload ou emoji para a página do membro">
         <input id="soloImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloImageFile','soloImage','soloMsg')">
-        <select id="soloStatus"><option value="planejamento">Em breve</option><option value="fase_envio">Em fase de envio</option><option value="em_votacao">Em votação</option><option value="aprovado">Aprovado</option><option value="finalizado">Finalizado</option></select>
+        <select id="soloStatus"><option value="em_colaboração">Em Colaboração</option><option value="fase_envio">Em fase de envio</option><option value="em_votacao">Em votação</option><option value="aprovado">Aprovado</option><option value="finalizado">Finalizado</option></select>
         <input id="soloPosition" type="number" min="0" placeholder="Ordem">
         <button class="btn primary" onclick="saveSoloMember()">Salvar membro</button>
         <button class="btn outline" onclick="clearSoloForm()">Limpar</button>
@@ -285,7 +285,7 @@
         <input id="soloProjectImage" placeholder="URL, upload ou emoji para a capa do projeto">
         <input id="soloProjectImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloProjectImageFile','soloProjectImage','soloProjectMsg')">
         <input id="soloProjectLink" placeholder="Link opcional do projeto">
-        <select id="soloProjectStatus"><option value="planejamento">Em breve</option><option value="fase_envio">Em fase de envio</option><option value="em_votacao">Em votação</option><option value="aprovado">Aprovado</option><option value="finalizado">Finalizado</option></select>
+        <select id="soloProjectStatus"><option value="planejamento">Em breve</option> <option value="em_colaboração">Em Colaboração</option> <option value="fase_envio">Em fase de envio</option><option value="em_votacao">Em votação</option><option value="aprovado">Aprovado</option><option value="finalizado">Finalizado</option></select>
         <input id="soloProjectPosition" type="number" min="0" placeholder="Ordem">
         <button class="btn primary" onclick="saveSoloProject()">Salvar projeto do membro</button>
         <button class="btn outline" onclick="clearSoloProjectForm()">Limpar</button>
