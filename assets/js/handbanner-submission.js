@@ -1,18 +1,44 @@
 let hbUser = null;
+
+function isGoogleUser(user){
+  return user?.app_metadata?.provider === "google" ||
+    (user?.identities || []).some(i => i.provider === "google");
+}
+
 async function hbLoginGoogle(){
   const msg=document.getElementById('hbLoginMsg');
-  if(!window.BARMY360_SUPABASE){ if(msg) msg.textContent='Supabase não conectado.'; return; }
-  await BARMY360_SUPABASE.auth.signInWithOAuth({provider:'google', options:{redirectTo: location.href}});
+  if(!window.BARMY360_SUPABASE){ 
+    if(msg) msg.textContent='Supabase não conectado.'; 
+    return; 
+  }
+  await BARMY360_SUPABASE.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo: location.href}
+  });
 }
+
 async function hbInit(){
+  const loginCard = document.getElementById('hbLoginCard');
+  const formCard = document.getElementById('hbFormCard');
+
+  if(loginCard) loginCard.classList.remove('hidden');
+  if(formCard) formCard.classList.add('hidden');
+
   if(!window.BARMY360_SUPABASE) return;
+
   const { data } = await BARMY360_SUPABASE.auth.getUser();
   hbUser = data?.user || null;
-  if(hbUser){
-    document.getElementById('hbLoginCard')?.classList.add('hidden');
-    document.getElementById('hbFormCard')?.classList.remove('hidden');
-    const email=document.getElementById('hbEmail'); if(email && hbUser.email) email.value=hbUser.email;
+
+  if(hbUser && isGoogleUser(hbUser)){
+    loginCard?.classList.add('hidden');
+    formCard?.classList.remove('hidden');
+
+    const email=document.getElementById('hbEmail');
+    if(email && hbUser.email) email.value=hbUser.email;
+  } else {
+    hbUser = null;
   }
+
   document.getElementById('hbSubmissionForm')?.addEventListener('submit', hbSubmit);
 }
 async function hbSubmit(e){
