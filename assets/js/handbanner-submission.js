@@ -44,7 +44,7 @@ async function hbInit(){
 async function hbSubmit(e){
   e.preventDefault();
   const msg=document.getElementById('hbFormMsg');
-  if(!window.BARMY360_SUPABASE || !hbUser){ if(msg) msg.textContent='Entre com Google antes de enviar.'; return; }
+  if(!window.BARMY360_SUPABASE || !hbUser || !isGoogleUser(hbUser)){ if(msg) msg.textContent='Entre com Google antes de enviar.'; return; }
   const { count, error:countError } = await BARMY360_SUPABASE.from('handbanner_art_submissions').select('id', { count:'exact', head:true }).eq('user_id', hbUser.id);
   if(countError){ if(msg) msg.textContent='Erro ao verificar limite: '+countError.message; return; }
   if((count||0) >= 3){ if(msg) msg.textContent='Limite de 3 envios por conta atingido.'; return; }
