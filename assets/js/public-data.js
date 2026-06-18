@@ -345,7 +345,7 @@ async function loadDynamicProjects() {
     );
 
   if (artEnabled) {
-    cards.push(`<article class="project-card campaign-card glow-card">
+    cards.unshift(`<article class="project-card campaign-card glow-card">
     <a href="projeto-handbanner-artes.html"><div class="project-image image-cover ratio-16-9" style="background-image:url('https://barmy360.com.br/assets/images/handbannerartcapa.png.PNG')"></div></a>
       <span class="status sending">FASE DE ENVIO</span>
       <h3>${escapeHtml(siteSettings.handbanner_art_title || "Hand Banner - Envio de artes")}</h3>
