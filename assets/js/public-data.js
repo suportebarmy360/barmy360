@@ -240,7 +240,6 @@ function handbannerArtProjectMarkup(p, siteSettings = {}) {
         <p>${escapeHtml(artText)}</p>
         <div class="project-detail-meta">
           <span class="meta-pill">🎨 Envio de artes</span>
-          <span class="meta-pill">Sem login Google</span>
           <span class="meta-pill">Até 3 envios</span>
         </div>
         <div class="hero-actions">
