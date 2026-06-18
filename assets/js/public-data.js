@@ -346,9 +346,10 @@ async function loadDynamicProjects() {
 
   if (artEnabled) {
     cards.push(`<article class="project-card campaign-card glow-card">
-      <a href="projeto-handbanner-artes.html"><div class="project-image purple-bg ratio-16-9">🎨</div></a>
+    <a href="projeto-handbanner-artes.html"><div class="project-image image-cover ratio-16-9" style="background-image:url('assets/images/handbannerartcapa.png.png')"></div></a>
       <span class="status sending">FASE DE ENVIO</span>
       <h3>${escapeHtml(siteSettings.handbanner_art_title || "Hand Banner - Envio de artes")}</h3>
+      <a href="projeto</div></a>
       <p>${escapeHtml(siteSettings.handbanner_art_text || "Envie sua arte seguindo o edital e o manual de submissão.")}</p>
       <div class="vote-line"><span>Status</span><strong>Publicado</strong></div>
       <a class="btn small primary" href="projeto-handbanner-artes.html">Ver projeto</a>
