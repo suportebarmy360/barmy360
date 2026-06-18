@@ -29,7 +29,7 @@ const DEFAULT_HANDBANNER_ARTS_PROJECT = {
   description: "Envie sua arte seguindo o edital e o manual de submissão.",
   details: "Área para envio de links do Drive/Nuvem com os arquivos do design. O envio usa limite de até 3 envios por aparelho/navegador, sem login Google.",
   status: "fase de envio",
-  image_url: "assets/images/b360-iso.png",
+  image_url: "assets/images/handbannerartcapa.png.PNG",
   published: true,
   is_default: true,
   project_type: "artes"
