@@ -1227,7 +1227,7 @@ async function loadSiteSettingsAdmin(){
   set('siteLaunchMode', s.launch_mode || 'open'); set('siteLaunchAt', s.launch_at || '2026-06-05T20:00:00-03:00'); set('siteHeroTitle', s.hero_title||''); set('siteHeroText', s.hero_text||''); set('siteHeroImage', s.hero_image||''); set('siteContactEmail', s.contact_email||'projeto.barmy360@gmail.com'); set('hbArtTitle', s.handbanner_art_title||'Enviar arte do Hand Banner'); set('hbArtText', s.handbanner_art_text||'Envie sua arte seguindo o edital e o manual de submissão.'); const hbChk=document.getElementById('hbArtEnabled'); if(hbChk) hbChk.checked=!!s.handbanner_art_enabled;
 }
 const LS_SOLOS_ADMIN='barmy360_solo_members';
-function defaultSolosAdmin(){return ['RM','Jin','SUGA','j-hope','Jimin','V','Jung Kook'].map((name,i)=>({id:String(i+1),member_name:name,title:name,description:'Projeto solo em breve.',status:'planejamento',image_url:'💜',cover_image:'💜',position:i+1}))}
+function defaultSolosAdmin(){return ['RM','Jin','SUGA','j-hope','Jimin','V','Jung Kook'].map((name,i)=>({id:String(i+1),member_name:name,title:name,description:'Projeto individual em breve.',status:'planejamento',image_url:'💜',cover_image:'💜',position:i+1}))}
 async function getSolosAdmin(){ if(sb()){ const {data}=await sb().from('solo_members').select('*').order('position',{ascending:true}); return data && data.length ? data : defaultSolosAdmin(); } const a=JSON.parse(localStorage.getItem(LS_SOLOS_ADMIN)||'[]'); return a.length?a:defaultSolosAdmin(); }
 function clearSoloForm(){ ['soloId','soloMember','soloTitle','soloDescription','soloCoverImage','soloImage','soloPosition'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=''}); const st=document.getElementById('soloStatus'); if(st) st.value='planejamento'; }
 function editSolo(m){ document.getElementById('soloId').value=m.id||''; document.getElementById('soloMember').value=m.member_name||''; document.getElementById('soloTitle').value=m.title||m.member_name||''; document.getElementById('soloDescription').value=m.description||''; document.getElementById('soloCoverImage').value=m.cover_image||m.image_url||''; document.getElementById('soloImage').value=m.image_url||m.cover_image||''; document.getElementById('soloStatus').value=m.status||'planejamento'; document.getElementById('soloPosition').value=m.position||''; }
@@ -1253,7 +1253,7 @@ async function loadHandbannerSubmissions(){ const el=document.getElementById('ad
 const __oldLoadAdminDataV2 = loadAdminData;
 loadAdminData = async function(){ await __oldLoadAdminDataV2(); await loadSiteSettingsAdmin(); await loadSolosAdminList(); await loadHandbannerSubmissions(); };
 
-/* ===== ADM Projetos Solos por membro - 2026-06-11 ===== */
+/* ===== ADM Projetos Individuais por membro - 2026-06-11 ===== */
 const LS_SOLO_PROJECTS_ADMIN = "barmy360_solo_projects";
 
 async function refreshSoloProjectMemberOptions(selectedId = "") {
@@ -1318,7 +1318,7 @@ async function saveSoloProject() {
 }
 
 async function deleteSoloProject(id) {
-  if (!confirm("Excluir este projeto solo?")) return;
+  if (!confirm("Excluir este projeto individual?")) return;
   if (sb()) {
     const { error } = await sb().from("solo_projects").delete().eq("id", id);
     if (error) return alert(error.message);
@@ -1345,7 +1345,7 @@ async function loadSoloProjectsAdminList() {
       <button class="btn small outline" onclick='editSoloProject(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
       <button class="btn small outline" onclick="deleteSoloProject('${escapeHtml(p.id)}')">Excluir</button>
     </div>
-  </article>`).join("") : "<p>Nenhum projeto solo cadastrado ainda.</p>";
+  </article>`).join("") : "<p>Nenhum projeto individual cadastrado ainda.</p>";
 }
 
 const __oldLoadAdminDataSolosProjects = loadAdminData;
@@ -1358,15 +1358,14 @@ function projectStatusLabelAdmin(status){
     analise: "Em análise",
     planejamento: "Em planejamento",
     em_votacao: "Em votação",
-    aprovado: "Aprovado",
+    aprovado: "Em colaboração",
     finalizado: "Finalizado",
-    nao_aprovado: "Não aprovado",
-    em_colaboracao: "Em Colaboração"
+    nao_aprovado: "Não aprovado"
   };
   return map[status] || status || "Em planejamento";
 }
 function projectStatusSelectAdmin(p){
-  const statuses = ["fase_envio","analise","planejamento","em_votacao","aprovado","finalizado","nao_aprovado", "Em colaboração"];
+  const statuses = ["fase_envio","analise","planejamento","em_votacao","aprovado","finalizado","nao_aprovado"];
   return `<select class="admin-inline-select" onchange="updateProjectStatus('${escapeHtml(p.id)}', this.value)">${statuses.map(s=>`<option value="${s}" ${String(p.status||'')===s?'selected':''}>${projectStatusLabelAdmin(s)}</option>`).join("")}</select>`;
 }
 async function updateProjectStatus(id, status){
@@ -1449,3 +1448,245 @@ loadSiteSettingsAdmin = async function(){
   const mode=document.getElementById('siteLaunchMode'); if(mode && (!mode.value || mode.value==='locked')) mode.value='open';
   const email=document.getElementById('siteContactEmail'); if(email && !email.value) email.value='projeto.barmy360@gmail.com';
 };
+
+/* ===== Ajustes Projetos Individuais / ADM organizado - 2026-06-17 ===== */
+function barmySoloStatusOptions(selected = '') {
+  const statuses = [
+    ['em_breve', 'Em breve'],
+    ['planejamento', 'Em planejamento'],
+    ['em_colaboracao', 'Em colaboração'],
+    ['fase_envio', 'Em fase de envio'],
+    ['em_votacao', 'Em votação'],
+    ['finalizado', 'Finalizado']
+  ];
+  return statuses.map(([value, label]) => `<option value="${value}" ${String(selected || '') === value ? 'selected' : ''}>${label}</option>`).join('');
+}
+
+function barmyNormalizeSoloStatus(value) {
+  const v = String(value || '').toLowerCase().trim();
+  if (v === 'aprovado' || v === 'colaboracao' || v === 'em colaboração' || v === 'em-colaboracao') return 'em_colaboracao';
+  if (v === 'breve' || v === 'em breve' || v === 'em-breve') return 'em_breve';
+  if (v === 'em planejamento' || v === 'em-planejamento') return 'planejamento';
+  return v || 'planejamento';
+}
+
+function barmyFillSoloStatusSelects() {
+  const soloStatus = document.getElementById('soloStatus');
+  if (soloStatus) soloStatus.innerHTML = barmySoloStatusOptions(soloStatus.value || 'planejamento');
+  const soloProjectStatus = document.getElementById('soloProjectStatus');
+  if (soloProjectStatus) soloProjectStatus.innerHTML = barmySoloStatusOptions(soloProjectStatus.value || 'planejamento');
+}
+
+function barmySoloLabel(status) {
+  const map = {
+    em_breve: 'Em breve',
+    planejamento: 'Em planejamento',
+    em_colaboracao: 'Em colaboração',
+    fase_envio: 'Em fase de envio',
+    em_votacao: 'Em votação',
+    finalizado: 'Finalizado'
+  };
+  return map[barmyNormalizeSoloStatus(status)] || 'Em planejamento';
+}
+
+async function saveSoloPageSettings() {
+  const patch = {
+    id: 1,
+    solo_page_kicker: val('soloPageKicker') || 'PROJETOS INDIVIDUAIS',
+    solo_page_title: val('soloPageTitle') || 'Projetos por membro',
+    solo_page_text: val('soloPageText') || 'Espaço reservado para projetos individuais.'
+  };
+
+  let local = {};
+  try { local = JSON.parse(localStorage.getItem(LS_SITE) || '{}'); } catch(e) {}
+  localStorage.setItem(LS_SITE, JSON.stringify({ ...local, ...patch }));
+
+  if (sb()) {
+    const { error } = await sb().from('site_settings').upsert(patch);
+    if (error) return setMsg('soloPageMsg', 'Erro: ' + error.message + ' — rode o SQL de atualização dos Projetos Individuais.');
+  }
+  setMsg('soloPageMsg', 'Textos da página salvos.');
+}
+
+window.saveSoloPageSettings = saveSoloPageSettings;
+
+const __barmySoloLoadSettings = loadSiteSettingsAdmin;
+loadSiteSettingsAdmin = async function(){
+  await __barmySoloLoadSettings();
+  const s = (() => { try { return JSON.parse(localStorage.getItem(LS_SITE) || '{}'); } catch(e) { return {}; } })();
+  let remote = {};
+  if (sb()) { try { const { data } = await sb().from('site_settings').select('*').eq('id',1).maybeSingle(); remote = data || {}; } catch(e) {} }
+  const data = { ...s, ...remote };
+  const set = (id, value) => { const el = document.getElementById(id); if (el) el.value = value || ''; };
+  set('soloPageKicker', data.solo_page_kicker || 'PROJETOS INDIVIDUAIS');
+  set('soloPageTitle', data.solo_page_title || 'Projetos por membro');
+  set('soloPageText', data.solo_page_text || 'Espaço reservado para projetos individuais.');
+  barmyFillSoloStatusSelects();
+};
+
+const __barmyOldClearSoloForm = clearSoloForm;
+clearSoloForm = function(){
+  __barmyOldClearSoloForm();
+  barmyFillSoloStatusSelects();
+  const st = document.getElementById('soloStatus'); if (st) st.value = 'planejamento';
+};
+
+editSolo = function(m){
+  document.getElementById('soloId').value = m.id || '';
+  document.getElementById('soloMember').value = m.member_name || '';
+  document.getElementById('soloTitle').value = m.title || m.member_name || '';
+  document.getElementById('soloDescription').value = m.description || '';
+  document.getElementById('soloCoverImage').value = m.cover_image || m.image_url || '';
+  document.getElementById('soloImage').value = m.image_url || m.cover_image || '';
+  barmyFillSoloStatusSelects();
+  document.getElementById('soloStatus').value = barmyNormalizeSoloStatus(m.status || 'planejamento');
+  document.getElementById('soloPosition').value = m.position || '';
+  document.getElementById('tab-solos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+saveSoloMember = async function(){
+  const row = {
+    member_name: val('soloMember'),
+    title: val('soloTitle') || val('soloMember'),
+    description: val('soloDescription'),
+    cover_image: val('soloCoverImage') || val('soloImage') || '💜',
+    image_url: val('soloImage') || val('soloCoverImage') || '💜',
+    status: barmyNormalizeSoloStatus(val('soloStatus') || 'planejamento'),
+    position: Number(val('soloPosition') || 0)
+  };
+  if (!row.member_name) return setMsg('soloMsg','Preencha o nome do membro.');
+  const id = val('soloId');
+  if (sb()) {
+    const q = id ? sb().from('solo_members').update(row).eq('id', id) : sb().from('solo_members').insert(row);
+    const { error } = await q;
+    if (error) return setMsg('soloMsg','Erro: '+error.message+' — rode o SQL atualizado.');
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_SOLOS_ADMIN) || '[]');
+    if (id) arr = arr.map(x => String(x.id) === String(id) ? { ...x, ...row } : x);
+    else arr.push({ ...row, id: Date.now() });
+    localStorage.setItem(LS_SOLOS_ADMIN, JSON.stringify(arr));
+  }
+  setMsg('soloMsg','Membro salvo.');
+  clearSoloForm();
+  await loadSolosAdminList();
+  await loadSoloProjectsAdminList();
+};
+
+loadSolosAdminList = async function(){
+  const el = document.getElementById('adminSolosList');
+  if (!el) return;
+  const rows = await getSolosAdmin();
+  el.innerHTML = rows.length ? rows.map(m => {
+    const cover = m.cover_image || m.image_url || '';
+    const img = (String(cover).startsWith('http') || String(cover).startsWith('assets/')) ? `<img class="admin-thumb" src="${escapeHtml(cover)}" alt="">` : `<div class="admin-thumb-placeholder">${escapeHtml(cover || '💜')}</div>`;
+    return `<article class="mini-admin-item admin-media-item">
+      ${img}
+      <div class="admin-media-body">
+        <strong>${escapeHtml(m.title || m.member_name)}</strong>
+        <p>${escapeHtml(m.description || '')}</p>
+        <small>${escapeHtml(barmySoloLabel(m.status))} • ordem ${Number(m.position || 0)}</small>
+        <div class="admin-actions"><button class="btn small outline" onclick='editSolo(${JSON.stringify(m).replace(/'/g,'&#39;')})'>Editar</button><button class="btn small outline" onclick="deleteSoloMember('${escapeHtml(m.id)}')">Excluir</button></div>
+      </div>
+    </article>`;
+  }).join('') : '<p>Nenhum membro cadastrado ainda.</p>';
+};
+
+const __barmyOldClearSoloProjectForm = clearSoloProjectForm;
+clearSoloProjectForm = function(){
+  __barmyOldClearSoloProjectForm();
+  barmyFillSoloStatusSelects();
+  const st = document.getElementById('soloProjectStatus'); if (st) st.value = 'planejamento';
+};
+
+editSoloProject = function(p){
+  document.getElementById('soloProjectId').value = p.id || '';
+  document.getElementById('soloProjectMember').value = p.solo_member_id || '';
+  document.getElementById('soloProjectTitle').value = p.title || '';
+  document.getElementById('soloProjectDescription').value = p.description || '';
+  document.getElementById('soloProjectImage').value = p.cover_image || p.image_url || '';
+  document.getElementById('soloProjectLink').value = p.link_url || '';
+  barmyFillSoloStatusSelects();
+  document.getElementById('soloProjectStatus').value = barmyNormalizeSoloStatus(p.status || 'planejamento');
+  document.getElementById('soloProjectPosition').value = p.position || '';
+  document.getElementById('soloProjectTitle')?.focus();
+};
+
+saveSoloProject = async function(){
+  const row = {
+    solo_member_id: val('soloProjectMember'),
+    title: val('soloProjectTitle'),
+    description: val('soloProjectDescription'),
+    image_url: val('soloProjectImage') || '✨',
+    cover_image: val('soloProjectImage') || '✨',
+    link_url: val('soloProjectLink'),
+    status: barmyNormalizeSoloStatus(val('soloProjectStatus') || 'planejamento'),
+    position: Number(val('soloProjectPosition') || 0)
+  };
+  if (!row.solo_member_id) return setMsg('soloProjectMsg', 'Selecione o membro.');
+  if (!row.title) return setMsg('soloProjectMsg', 'Preencha o título do projeto.');
+  const id = val('soloProjectId');
+  if (sb()) {
+    const q = id ? sb().from('solo_projects').update(row).eq('id', id) : sb().from('solo_projects').insert(row);
+    const { error } = await q;
+    if (error) return setMsg('soloProjectMsg', 'Erro: ' + error.message + ' — rode o SQL atualizado.');
+  } else {
+    let arr = JSON.parse(localStorage.getItem(LS_SOLO_PROJECTS_ADMIN) || '[]');
+    if (id) arr = arr.map(x => String(x.id) === String(id) ? { ...x, ...row } : x);
+    else arr.push({ ...row, id: Date.now() });
+    localStorage.setItem(LS_SOLO_PROJECTS_ADMIN, JSON.stringify(arr));
+  }
+  setMsg('soloProjectMsg', 'Projeto do membro salvo.');
+  clearSoloProjectForm();
+  await loadSoloProjectsAdminList();
+};
+
+loadSoloProjectsAdminList = async function(){
+  await refreshSoloProjectMemberOptions(document.getElementById('soloProjectMember')?.value || '');
+  const el = document.getElementById('adminSoloProjectsList');
+  if (!el) return;
+  const [projects, members] = await Promise.all([getSoloProjectsAdmin(), getSolosAdmin()]);
+  const memberName = (id) => {
+    const m = members.find(x => String(x.id) === String(id));
+    return m?.title || m?.member_name || 'Membro';
+  };
+  el.innerHTML = projects.length ? projects.map(p => {
+    const cover = p.cover_image || p.image_url || '';
+    const img = (String(cover).startsWith('http') || String(cover).startsWith('assets/')) ? `<img class="admin-thumb" src="${escapeHtml(cover)}" alt="">` : `<div class="admin-thumb-placeholder">${escapeHtml(cover || '✨')}</div>`;
+    return `<article class="mini-admin-item admin-media-item">
+      ${img}
+      <div class="admin-media-body">
+        <strong>${escapeHtml(p.title || 'Projeto')}</strong>
+        <p>${escapeHtml(p.description || '')}</p>
+        <small>${escapeHtml(memberName(p.solo_member_id))} • ${escapeHtml(barmySoloLabel(p.status))} • ordem ${Number(p.position || 0)}</small>
+        <div class="admin-actions">
+          ${p.link_url ? `<a class="btn small primary" href="${escapeHtml(p.link_url)}" target="_blank" rel="noopener">Abrir</a>` : ''}
+          <button class="btn small outline" onclick='editSoloProject(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Editar</button>
+          <button class="btn small outline" onclick="deleteSoloProject('${escapeHtml(p.id)}')">Excluir</button>
+        </div>
+      </div>
+    </article>`;
+  }).join('') : '<p>Nenhum projeto individual cadastrado ainda.</p>';
+};
+
+// Status geral de projetos: aprovado passa a ser exibido como colaboração.
+projectStatusLabelAdmin = function(status){
+  const map = {
+    fase_envio: 'Em fase de envio',
+    analise: 'Em análise',
+    planejamento: 'Em planejamento',
+    em_breve: 'Em breve',
+    em_votacao: 'Em votação',
+    aprovado: 'Em colaboração',
+    em_colaboracao: 'Em colaboração',
+    finalizado: 'Finalizado',
+    nao_aprovado: 'Não aprovado'
+  };
+  return map[status] || status || 'Em planejamento';
+};
+projectStatusSelectAdmin = function(p){
+  const statuses = ['em_breve','planejamento','em_colaboracao','fase_envio','analise','em_votacao','finalizado','nao_aprovado'];
+  const current = barmyNormalizeSoloStatus(p.status || 'planejamento');
+  return `<select class="admin-inline-select" onchange="updateProjectStatus('${escapeHtml(p.id)}', this.value)">${statuses.map(s=>`<option value="${s}" ${String(current)===s?'selected':''}>${projectStatusLabelAdmin(s)}</option>`).join('')}</select>`;
+};
+
+document.addEventListener('DOMContentLoaded', barmyFillSoloStatusSelects);

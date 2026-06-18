@@ -8,11 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css?v=20260604-v3">
+    <link rel="stylesheet" href="assets/css/style.css?v=20260617-mobile-device">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script defer src="assets/js/config.js"></script>
     <script defer src="assets/js/main.js"></script>
-        <script defer src="assets/js/handbanner-submission.js"></script>
+        <script defer src="assets/js/handbanner-submission.js?v=20260617-device-limit"></script>
 </head>
 
 <body>
@@ -34,16 +34,16 @@
             <h1>Envio de artes do Hand Banner</h1>
             <p>Área preparada para a fase de envio de designs. O acesso pode ser ativado pelo Painel ADM.</p>
         </div>
-        <section id="hbLoginCard" class="admin-card glow-card">
-            <h2>Entrar com Google</h2>
-            <p>Para limitar os envios, será necessário entrar com uma conta Google. Cada conta poderá enviar até 3
-                artes.</p><button class="btn primary" onclick="hbLoginGoogle()">Entrar com Google</button>
+        <section id="hbLoginCard" class="admin-card glow-card hidden">
+            <h2>Envio sem login Google</h2>
+            <p>O envio é limitado a 3 artes por aparelho/navegador.</p>
             <p id="hbLoginMsg" class="form-msg"></p>
         </section>
-        <section id="hbFormCard" class="admin-card glow-card hidden">
+        <section id="hbFormCard" class="admin-card glow-card">
             <h2>Formulário obrigatório</h2>
             <p class="admin-help">Envie links do Drive/Nuvem com acesso de visualização. Não envie RG, CPF ou documentos
                 pessoais sensíveis pelo site.</p>
+            <p id="hbDeviceHint" class="admin-help"><strong>Limite:</strong> até 3 envios por aparelho/navegador.</p>
             <form id="hbSubmissionForm"><input id="hbFullName" required placeholder="Nome completo"><input id="hbSocial"
                     required placeholder="@ e rede social. Ex: @barmy360 no X/Twitter"><input id="hbEmail" type="email"
                     required placeholder="E-mail"><input id="hbCloudLink" type="url" required

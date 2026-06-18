@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20260604-v3">
+<link rel="stylesheet" href="assets/css/style.css?v=20260617-mobile-device">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script defer src="assets/js/config.js"></script>
 <script defer src="assets/js/main.js"></script>
@@ -40,7 +40,7 @@
     <div class="admin-tabs">
       <button class="tab active" onclick="showAdminTab('posts', this)">Avisos</button>
       <button class="tab" onclick="showAdminTab('projects', this)">Projetos e Votações</button>
-      <button class="tab" onclick="showAdminTab('solos', this)">Projetos Solos</button>
+      <button class="tab" onclick="showAdminTab('solos', this)">Projetos Individuais</button>
       <button class="tab" onclick="showAdminTab('artes', this)">Hand Banner Artes</button>
       <button class="tab" onclick="showAdminTab('frases', this)">Frases Recebidas</button>
       <button class="tab" onclick="showAdminTab('ajuda', this)">BARMY Ajuda</button>
@@ -85,10 +85,9 @@
           <option value="analise">Em análise</option>
           <option value="planejamento">Em planejamento</option>
           <option value="em_votacao">Em votação</option>
-          <option value="aprovado">Aprovado</option>
+          <option value="em_colaboracao">Em colaboração</option>
           <option value="finalizado">Finalizado</option>
           <option value="nao_aprovado">Não aprovado</option>
-          <option value= "em_colaboração">Em colaboração"</option>
         </select>
         <label class="check-row"><input id="projectVotingOpen" type="checkbox" checked> Votação aberta para este projeto</label>
         <button class="btn primary" onclick="saveProject()">Salvar projeto</button>
@@ -106,15 +105,11 @@
           <option value="aberta">Aberta</option>
           <option value="fechada">Fechada</option>
           <option value="rascunho">Rascunho</option>
-          <option value="em_colaboração">Em Colaboração</option>
-          
         </select>
         <select id="simpleVotePhase">
           <option value="fase1">Fase 1</option>
           <option value="semifinal">Semifinal</option>
           <option value="final">Final</option>
-          <option value="Fase_unica">Fase Única</option>
-          
         </select>
         <label class="check-row"><input id="simpleVoteRanking" type="checkbox" checked> Mostrar contador/ranking para o público</label>
         <button class="btn primary" onclick="saveSimpleProjectVoting()">Salvar votação deste projeto</button>
@@ -253,45 +248,129 @@
 
 
     <div id="tab-solos" class="admin-tab-panel hidden">
-      <section class="admin-card">
+      <section class="admin-card admin-hero-card">
         <h2>Projetos Individuais</h2>
-        <p class="admin-help">Edite o card do membro e a imagem que aparece dentro da página individual.</p>
+        <p class="admin-help">Organize a página, os cards dos membros e os projetos dentro de cada membro.</p>
+      </section>
+
+      <section class="admin-card">
+        <h2>Textos da página de entrada</h2>
+        <p class="admin-help">Esses campos controlam o título e a descrição da página pública de Projetos Individuais.</p>
+        <label>Título principal da página</label>
+        <input id="soloPageTitle" placeholder="Ex: Projetos por membro">
+        <label>Descrição/Bio da página</label>
+        <textarea id="soloPageText" placeholder="Ex: Espaço para organizar os projetos individuais dos membros."></textarea>
+        <label>Texto pequeno acima do título</label>
+        <input id="soloPageKicker" placeholder="Ex: PROJETOS INDIVIDUAIS">
+        <button class="btn primary" onclick="saveSoloPageSettings()">Salvar textos da página</button>
+        <p id="soloPageMsg" class="form-msg"></p>
+      </section>
+
+      <section class="admin-card admin-form-grid-card">
+        <div class="admin-card-head">
+          <div>
+            <h2>Card do membro</h2>
+            <p class="admin-help">Edite a capa, título e bio do card de entrada. A foto interna aparece na página do membro.</p>
+          </div>
+          <button class="btn outline" onclick="clearSoloForm()">Limpar</button>
+        </div>
         <input id="soloId" type="hidden">
-        <input id="soloMember" placeholder="Membro. Ex: RM">
-        <input id="soloTitle" placeholder="Título do card. Ex: RM">
-        <textarea id="soloDescription" placeholder="Descrição do membro / página"></textarea>
-        <label>Capa do card do membro, na tela Projetos Solos</label>
-        <input id="soloCoverImage" placeholder="URL, upload ou emoji para a capa do card">
-        <input id="soloCoverImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloCoverImageFile','soloCoverImage','soloMsg')">
-        <label>Foto/imagem dentro da página do membro</label>
-        <input id="soloImage" placeholder="URL, upload ou emoji para a página do membro">
-        <input id="soloImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloImageFile','soloImage','soloMsg')">
-        <select id="soloStatus"><option value="em_colaboração">Em Colaboração</option><option value="fase_envio">Em fase de envio</option><option value="em_votacao">Em votação</option><option value="aprovado">Aprovado</option><option value="finalizado">Finalizado</option></select>
-        <input id="soloPosition" type="number" min="0" placeholder="Ordem">
+        <div class="admin-form-grid two-cols">
+          <div>
+            <label>Membro</label>
+            <input id="soloMember" placeholder="Ex: RM">
+          </div>
+          <div>
+            <label>Título do card</label>
+            <input id="soloTitle" placeholder="Ex: RM">
+          </div>
+          <div class="span-2">
+            <label>Bio/descrição do membro</label>
+            <textarea id="soloDescription" placeholder="Descrição do card e da página do membro"></textarea>
+          </div>
+          <div>
+            <label>Capa do card de entrada</label>
+            <input id="soloCoverImage" placeholder="URL, upload ou emoji">
+            <input id="soloCoverImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloCoverImageFile','soloCoverImage','soloMsg')">
+          </div>
+          <div>
+            <label>Foto dentro da página do membro</label>
+            <input id="soloImage" placeholder="URL, upload ou emoji">
+            <input id="soloImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloImageFile','soloImage','soloMsg')">
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="soloStatus">
+              <option value="em_breve">Em breve</option>
+              <option value="planejamento">Em planejamento</option>
+              <option value="em_colaboracao">Em colaboração</option>
+              <option value="fase_envio">Em fase de envio</option>
+              <option value="em_votacao">Em votação</option>
+              <option value="finalizado">Finalizado</option>
+            </select>
+          </div>
+          <div>
+            <label>Ordem</label>
+            <input id="soloPosition" type="number" min="0" placeholder="Ex: 1">
+          </div>
+        </div>
         <button class="btn primary" onclick="saveSoloMember()">Salvar membro</button>
-        <button class="btn outline" onclick="clearSoloForm()">Limpar</button>
         <p id="soloMsg" class="form-msg"></p>
       </section>
-      <section class="admin-card"><h2>Membros cadastrados</h2><div id="adminSolosList" class="admin-list"></div></section>
-      <section class="admin-card">
-        <h2>Projetos do membro</h2>
-        <p class="admin-help">Cadastre os cards que aparecem dentro da página individual de cada membro.</p>
+
+      <section class="admin-card"><h2>Membros cadastrados</h2><div id="adminSolosList" class="admin-list cards-admin-list"></div></section>
+
+      <section class="admin-card admin-form-grid-card">
+        <div class="admin-card-head">
+          <div>
+            <h2>Projetos dentro do membro</h2>
+            <p class="admin-help">Cadastre os cards que aparecem dentro da página individual de cada membro.</p>
+          </div>
+          <button class="btn outline" onclick="clearSoloProjectForm()">Limpar</button>
+        </div>
         <input id="soloProjectId" type="hidden">
-        <label>Membro</label>
-        <select id="soloProjectMember"></select>
-        <input id="soloProjectTitle" placeholder="Título do projeto. Ex: Fan Project RM">
-        <textarea id="soloProjectDescription" placeholder="Descrição do projeto"></textarea>
-        <label>Capa do projeto, dentro da página do membro</label>
-        <input id="soloProjectImage" placeholder="URL, upload ou emoji para a capa do projeto">
-        <input id="soloProjectImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloProjectImageFile','soloProjectImage','soloProjectMsg')">
-        <input id="soloProjectLink" placeholder="Link opcional do projeto">
-        <select id="soloProjectStatus"><option value="planejamento">Em breve</option> <option value="em_colaboração">Em Colaboração</option> <option value="fase_envio">Em fase de envio</option><option value="em_votacao">Em votação</option><option value="aprovado">Aprovado</option><option value="finalizado">Finalizado</option></select>
-        <input id="soloProjectPosition" type="number" min="0" placeholder="Ordem">
+        <div class="admin-form-grid two-cols">
+          <div>
+            <label>Membro</label>
+            <select id="soloProjectMember"></select>
+          </div>
+          <div>
+            <label>Título do projeto</label>
+            <input id="soloProjectTitle" placeholder="Ex: Flores para Jimin">
+          </div>
+          <div class="span-2">
+            <label>Descrição/Bio do projeto</label>
+            <textarea id="soloProjectDescription" placeholder="Descrição do projeto"></textarea>
+          </div>
+          <div>
+            <label>Capa do projeto</label>
+            <input id="soloProjectImage" placeholder="URL, upload ou emoji">
+            <input id="soloProjectImageFile" type="file" accept="image/*" onchange="uploadImageToField('soloProjectImageFile','soloProjectImage','soloProjectMsg')">
+          </div>
+          <div>
+            <label>Link do projeto</label>
+            <input id="soloProjectLink" placeholder="Link opcional">
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="soloProjectStatus">
+              <option value="em_breve">Em breve</option>
+              <option value="planejamento">Em planejamento</option>
+              <option value="em_colaboracao">Em colaboração</option>
+              <option value="fase_envio">Em fase de envio</option>
+              <option value="em_votacao">Em votação</option>
+              <option value="finalizado">Finalizado</option>
+            </select>
+          </div>
+          <div>
+            <label>Ordem</label>
+            <input id="soloProjectPosition" type="number" min="0" placeholder="Ex: 1">
+          </div>
+        </div>
         <button class="btn primary" onclick="saveSoloProject()">Salvar projeto do membro</button>
-        <button class="btn outline" onclick="clearSoloProjectForm()">Limpar</button>
         <p id="soloProjectMsg" class="form-msg"></p>
       </section>
-      <section class="admin-card"><h2>Projetos solos cadastrados</h2><div id="adminSoloProjectsList" class="admin-list"></div></section>
+      <section class="admin-card"><h2>Projetos individuais cadastrados</h2><div id="adminSoloProjectsList" class="admin-list cards-admin-list"></div></section>
     </div>
 
     <div id="tab-artes" class="admin-tab-panel hidden">

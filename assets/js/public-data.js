@@ -27,7 +27,7 @@ const DEFAULT_HANDBANNER_ARTS_PROJECT = {
   slug: "handbanner-artes",
   title: "HAND BANNER - Envio de artes",
   description: "Envie sua arte seguindo o edital e o manual de submissão.",
-  details: "Área para envio de links do Drive/Nuvem com os arquivos do design. O envio usa login Google e limite de até 3 envios por conta.",
+  details: "Área para envio de links do Drive/Nuvem com os arquivos do design. O envio usa limite de até 3 envios por aparelho/navegador, sem login Google.",
   status: "fase de envio",
   image_url: "assets/images/b360-iso.png",
   published: true,
@@ -240,7 +240,7 @@ function handbannerArtProjectMarkup(p, siteSettings = {}) {
         <p>${escapeHtml(artText)}</p>
         <div class="project-detail-meta">
           <span class="meta-pill">🎨 Envio de artes</span>
-          <span class="meta-pill">Login Google</span>
+          <span class="meta-pill">Sem login Google</span>
           <span class="meta-pill">Até 3 envios</span>
         </div>
         <div class="hero-actions">
@@ -254,7 +254,7 @@ function handbannerArtProjectMarkup(p, siteSettings = {}) {
   <section class="project-detail-grid section">
     <article class="detail-box glow-card"><h2>📌 Sobre o envio</h2><p>${escapeHtml(artText)}</p></article>
     <article class="detail-box glow-card"><h2>📁 Como enviar</h2><p>O formulário de envio fica em uma página separada. Envie links do Drive/Nuvem com acesso de leitura. Não envie arquivos pesados direto para o banco.</p></article>
-    <article class="detail-box glow-card"><h2>⚠️ Regras</h2><ul><li>Até 3 envios por conta Google.</li><li>O link deve conter os itens pedidos no edital/manual.</li><li>Menores de idade precisam de autorização do responsável.</li></ul></article>
+    <article class="detail-box glow-card"><h2>⚠️ Regras</h2><ul><li>Até 3 envios por aparelho/navegador.</li><li>O link deve conter os itens pedidos no edital/manual.</li><li>Menores de idade precisam de autorização do responsável.</li></ul></article>
   </section>`;
 }
 
@@ -840,7 +840,7 @@ function statusText(s) {
     fechado: "FINALIZADO",
     nao_aprovado: "NÃO APROVADO",
     "não_aprovado": "NÃO APROVADO",
-    em_colaboracao: "EM COLABORAÇÃO"
+    "em_colaboracao":"EM COLABORAÇÃO"
   };
   return map[String(s || "").toLowerCase()] || "EM VOTAÇÃO";
 }
@@ -953,7 +953,7 @@ async function loadSchedulePage() {
 
 
 const LS_SOLOS = "barmy360_solo_members";
-const defaultSoloMembers = ["RM","Jin","SUGA","j-hope","Jimin","V","Jung Kook"].map((name, i) => ({ id: String(i+1), member_name: name, title: name, description: "Projeto individual em breve.", status: "Em colaboração", image_url: "💜", cover_image: "💜", position: i+1 }));
+const defaultSoloMembers = ["RM","Jin","SUGA","j-hope","Jimin","V","Jung Kook"].map((name, i) => ({ id: String(i+1), member_name: name, title: name, description: "Projeto individual em breve.", status: "planejamento", image_url: "💜", cover_image: "💜", position: i+1 }));
 async function getSoloMembers(){
   let rows=[];
   if(window.BARMY360_SUPABASE){
@@ -966,7 +966,7 @@ function soloCardMarkup(m){
   const img = m.cover_image || m.image_url || "💜";
   const image = String(img).startsWith("http") ? `<div class="project-image image-cover ratio-16-9" style="background-image:url('${escapeAttr(img)}')"></div>` : `<div class="project-image purple-bg ratio-16-9">${escapeHtml(img)}</div>`;
   const href = `projeto-solo-detalhe.html?id=${encodeURIComponent(m.id || m.member_name || m.title || '')}`;
-  return `<a class="project-card glow-card solo-member-card-link" href="${escapeAttr(href)}">${image}<span class="status ${statusClass(m.status || 'em colaboração')}">${escapeHtml(statusText(m.status || 'em colaboração') || 'EM BREVE')}</span><h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3><p>${escapeHtml(m.description || 'Projeto individual em colaboração.')}</p></a>`;
+  return `<a class="project-card glow-card solo-member-card-link" href="${escapeAttr(href)}">${image}<span class="status ${statusClass(m.status || 'planejamento')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span><h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3><p>${escapeHtml(m.description || 'Projeto individual em breve.')}</p></a>`;
 }
 async function loadSoloMembersPage(){
   const grid = document.getElementById("soloMembersGrid");
@@ -994,7 +994,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSoloMembersPage();
 });
 
-/* ===== Projetos Solos com páginas por membro - 2026-06-11 ===== */
+/* ===== Projetos Individuais com páginas por membro - 2026-06-11 ===== */
 const LS_SOLO_PROJECTS = "barmy360_solo_projects";
 
 function soloMemberHref(m) {
@@ -1027,9 +1027,9 @@ async function getSoloProjects(memberId) {
 soloCardMarkup = function(m) {
   return `<article class="project-card glow-card">
     <a href="${soloMemberHref(m)}">${soloImageMarkupFromValue(m.cover_image || m.image_url, "project-image")}</a>
-    <span class="status ${statusClass(m.status || 'em colaboração')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span>
+    <span class="status ${statusClass(m.status || 'planejamento')}">${escapeHtml(statusText(m.status || 'planejamento') || 'EM BREVE')}</span>
     <h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3>
-    <p>${escapeHtml(m.description || 'Projeto individual - Em colaboração.')}</p>
+    <p>${escapeHtml(m.description || 'Projeto individual em breve.')}</p>
     <a class="btn small primary" href="${soloMemberHref(m)}">Ver projetos</a>
   </article>`;
 };
@@ -1059,8 +1059,8 @@ async function loadSoloDetailPage() {
         <p class="kicker">PROJETO SOLO</p>
         <span class="status ${statusClass(member.status || 'planejamento')}">${escapeHtml(statusText(member.status || 'planejamento') || 'EM BREVE')}</span>
         <h1>${escapeHtml(member.title || member.member_name || 'Membro')}</h1>
-        <p>${escapeHtml(member.description || 'Página para organizar projetos solos deste membro.')}</p>
-        <div class="hero-actions"><a class="btn outline" href="projetos-solos.html">← Voltar para Projetos Solos</a></div>
+        <p>${escapeHtml(member.description || 'Página para organizar projetos individuais deste membro.')}</p>
+        <div class="hero-actions"><a class="btn outline" href="projetos-solos.html">← Voltar para Projetos Individuais</a></div>
       </div>
     </div>
   </section>
@@ -1073,3 +1073,121 @@ async function loadSoloDetailPage() {
 }
 
 document.addEventListener("DOMContentLoaded", loadSoloDetailPage);
+
+/* ===== Ajustes públicos: Projetos Individuais / status colaboração - 2026-06-17 ===== */
+function normalizeBarmyStatus(value){
+  const v = String(value || '').toLowerCase().trim();
+  if (v === 'aprovado' || v === 'colaboracao' || v === 'em colaboração' || v === 'em-colaboracao') return 'em_colaboracao';
+  if (v === 'breve' || v === 'em breve' || v === 'em-breve') return 'em_breve';
+  if (v === 'em planejamento' || v === 'em-planejamento') return 'planejamento';
+  return v || 'planejamento';
+}
+
+statusClass = function(s) {
+  const v = normalizeBarmyStatus(s);
+  if (["finalizado", "fechado", "nao_aprovado", "não_aprovado"].includes(v)) return "closed";
+  if (["analise", "em_analise", "em análise"].includes(v)) return "analysis";
+  if (["planejamento", "em_breve"].includes(v)) return "planning";
+  if (["fase_envio", "em_fase_de_envio", "envio"].includes(v)) return "sending";
+  if (["em_colaboracao"].includes(v)) return "collab";
+  return "voting";
+};
+
+statusText = function(s) {
+  const map = {
+    em_breve: "EM BREVE",
+    fase_envio: "EM FASE DE ENVIO",
+    em_fase_de_envio: "EM FASE DE ENVIO",
+    envio: "EM FASE DE ENVIO",
+    analise: "EM ANÁLISE",
+    em_analise: "EM ANÁLISE",
+    planejamento: "EM PLANEJAMENTO",
+    em_planejamento: "EM PLANEJAMENTO",
+    em_votacao: "EM VOTAÇÃO",
+    votacao: "EM VOTAÇÃO",
+    aprovado: "EM COLABORAÇÃO",
+    em_colaboracao: "EM COLABORAÇÃO",
+    finalizado: "FINALIZADO",
+    fechado: "FINALIZADO",
+    nao_aprovado: "NÃO APROVADO",
+    "não_aprovado": "NÃO APROVADO"
+  };
+  return map[normalizeBarmyStatus(s)] || "EM PLANEJAMENTO";
+};
+
+async function getSoloPublicSettings(){
+  const s = await getPublicSiteSettings();
+  return {
+    kicker: s.solo_page_kicker || 'PROJETOS INDIVIDUAIS',
+    title: s.solo_page_title || 'Projetos por membro',
+    text: s.solo_page_text || 'Espaço reservado para projetos individuais.',
+    detailKicker: s.solo_detail_kicker || 'PROJETO INDIVIDUAL'
+  };
+}
+
+loadSoloMembersPage = async function(){
+  const grid = document.getElementById("soloMembersGrid");
+  if(!grid) return;
+  const settings = await getSoloPublicSettings();
+  const heading = document.querySelector('main .section-heading');
+  if (heading) {
+    const kicker = heading.querySelector('.kicker');
+    const title = heading.querySelector('h1');
+    const text = heading.querySelector('p:not(.kicker)');
+    if (kicker) kicker.textContent = settings.kicker;
+    if (title) title.textContent = settings.title;
+    if (text) text.textContent = settings.text;
+  }
+  const rows = await getSoloMembers();
+  grid.innerHTML = rows.map(soloCardMarkup).join("");
+};
+
+soloCardMarkup = function(m) {
+  return `<article class="project-card glow-card">
+    <a href="${soloMemberHref(m)}">${soloImageMarkupFromValue(m.cover_image || m.image_url, "project-image")}</a>
+    <span class="status ${statusClass(m.status || 'planejamento')}">${escapeHtml(statusText(m.status || 'planejamento'))}</span>
+    <h3>${escapeHtml(m.title || m.member_name || 'Membro')}</h3>
+    <p>${escapeHtml(m.description || 'Projeto individual em breve.')}</p>
+    <a class="btn small primary" href="${soloMemberHref(m)}">Ver projetos</a>
+  </article>`;
+};
+
+soloProjectCardMarkup = function(p) {
+  return `<article class="project-card glow-card">
+    ${soloImageMarkupFromValue(p.cover_image || p.image_url, "project-image")}
+    <span class="status ${statusClass(p.status || 'planejamento')}">${escapeHtml(statusText(p.status || 'planejamento'))}</span>
+    <h3>${escapeHtml(p.title || 'Projeto')}</h3>
+    <p>${escapeHtml(p.description || '')}</p>
+    ${p.link_url ? `<a class="btn small outline" href="${escapeAttr(p.link_url)}" target="_blank" rel="noopener">Abrir projeto</a>` : ``}
+  </article>`;
+};
+
+loadSoloDetailPage = async function() {
+  const root = document.getElementById("soloDetailRoot");
+  if (!root) return;
+  const settings = await getSoloPublicSettings();
+  const id = new URLSearchParams(location.search).get("id");
+  const members = await getSoloMembers();
+  const member = members.find((m) => String(m.id) === String(id) || String(m.member_name) === String(id) || String(m.title) === String(id)) || members[0];
+  if (!member) return;
+  const projects = await getSoloProjects(member.id);
+  document.title = `${member.title || member.member_name || 'Projeto Individual'} | BARMY360`;
+  root.innerHTML = `<section class="project-detail-hero solo-member-hero">
+    <div class="project-detail-card glow-card">
+      ${soloImageMarkupFromValue(member.image_url || member.cover_image, "project-detail-image")}
+      <div class="project-detail-info">
+        <p class="kicker">${escapeHtml(settings.detailKicker)}</p>
+        <span class="status ${statusClass(member.status || 'planejamento')}">${escapeHtml(statusText(member.status || 'planejamento'))}</span>
+        <h1>${escapeHtml(member.title || member.member_name || 'Membro')}</h1>
+        <p>${escapeHtml(member.description || 'Página para organizar projetos individuais deste membro.')}</p>
+        <div class="hero-actions"><a class="btn outline" href="projetos-solos.html">← Voltar para Projetos Individuais</a></div>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-heading compact-heading"><p class="kicker">CARDS DE PROJETOS</p><h2>Projetos cadastrados</h2><p>As ADMs podem adicionar, editar e remover esses cards pelo painel.</p></div>
+    <div class="project-grid solo-projects-grid">
+      ${projects.length ? projects.map(soloProjectCardMarkup).join("") : `<article class="project-card glow-card"><div class="project-image purple-bg ratio-16-9">✨</div><span class="status planning">EM BREVE</span><h3>Nenhum projeto cadastrado ainda</h3><p>Quando as ADMs cadastrarem projetos para este membro, eles aparecerão aqui.</p></article>`}
+    </div>
+  </section>`;
+};

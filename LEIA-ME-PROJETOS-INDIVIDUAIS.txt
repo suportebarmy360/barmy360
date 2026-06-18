@@ -1,0 +1,18 @@
+Atualização BARMY360 - Projetos Individuais
+
+Alterações feitas:
+- "Projetos Solos" renomeado para "Projetos Individuais" no site e no painel.
+- Status adicionados/ajustados: Em breve, Em planejamento, Em colaboração, Em fase de envio, Em votação e Finalizado.
+- Status antigo "Aprovado" passa a aparecer como "Em colaboração".
+- Painel ADM reorganizado com menu lateral, formulários em duas colunas e listas com miniaturas.
+- Painel permite editar título e bio da página de Projetos Individuais.
+- Painel permite editar título, bio, capa do card e foto interna de cada membro.
+- Painel permite editar título, bio/descrição, capa, link e status dos projetos dentro de cada membro.
+- Mantido envio de artes sem Google e com limite de 3 envios por aparelho/navegador.
+- Corrigido detalhe de votação: fingerprint agora é enviado corretamente.
+
+No Supabase, rode também:
+sql-patch-projetos-individuais-20260617.sql
+
+Se ainda não rodou antes, rode também:
+sql-patch-handbanner-device-limit-20260617.sql
