@@ -1,5 +1,5 @@
-const SUPABASE_URL = "https://sopyutkxzqvcknbinivh.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_CusDRusxAfY6JbVXNxkDCw_X2U-DnjE";
+const SUPABASE_URL = "https://qulpiltealpyfukxgqid.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_DoY4GNMKfgBwC7FW40847A_kGYWwe8S";
 
 window.BARMY360_SUPABASE = null;
 
