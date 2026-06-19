@@ -3,14 +3,14 @@
 const SUPABASE_URL = "https://aprwsorxusduarjtkphu.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_3Mkx5WvdF6uW3I9_sHzC1w_joCWF2ZF";
 
-window.BARMY360NV_SUPABASE = null;
+window.BARMY360_SUPABASE = null;
 
 if (
   SUPABASE_URL.startsWith("http") &&
   SUPABASE_ANON_KEY.length > 20 &&
   window.supabase
 ) {
-  window.BARMY360NV_SUPABASE = window.supabase.createClient(
+  window.BARMY360_SUPABASE = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
   );
