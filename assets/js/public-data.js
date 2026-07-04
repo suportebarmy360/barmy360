@@ -29,7 +29,7 @@ const DEFAULT_HANDBANNER_ARTS_PROJECT = {
   description: "Envie sua arte seguindo o edital e o manual de submissão.",
   details: "Área para envio de links do Drive/Nuvem com os arquivos do design. O envio usa limite de até 3 envios por aparelho/navegador, sem login Google.",
   status: "fase de envio",
-  image_url: "https://barmy360.com.br/assets/images/handbannerartcapa.png.PNG",
+  image_url: "assets/images/b360-iso.png",
   published: true,
   is_default: true,
   project_type: "artes"
@@ -161,6 +161,7 @@ function projectDisplayStatus(p) {
 }
 
 function projectDetailHref(p) {
+  if (String(p?.project_key||"") === "handbanner-votacao") return "votacao-handbanner.html";
   if (projectIsHandbannerArts(p)) return `projeto-handbanner-artes.html?id=${encodeURIComponent(p.id || "handbanner-artes")}`;
   if (projectIsHandbannerPhrases(p)) return `projeto-handbanner-frases.html?id=${encodeURIComponent(p.id || "handbanner-frases")}`;
   return `projeto-detalhe.html?id=${encodeURIComponent(p.id)}`;
@@ -240,6 +241,7 @@ function handbannerArtProjectMarkup(p, siteSettings = {}) {
         <p>${escapeHtml(artText)}</p>
         <div class="project-detail-meta">
           <span class="meta-pill">🎨 Envio de artes</span>
+          <span class="meta-pill">Sem login Google</span>
           <span class="meta-pill">Até 3 envios</span>
         </div>
         <div class="hero-actions">
@@ -325,14 +327,16 @@ async function loadDynamicProjects() {
 
   const siteSettings = await getPublicSiteSettings();
   const artEnabled = !!siteSettings.handbanner_art_enabled;
-  const cards = projects
+  const visibleProjects = projects.filter(p => String(p.project_key||"") !== "handbanner-votacao" || String(p.status||"") !== "rascunho");
+  const cards = visibleProjects
     .slice(0, 12)
     .map(
       (p) => {
         const isPhrase = projectIsHandbannerPhrases(p);
         const isArt = projectIsHandbannerArts(p);
-        const href = isPhrase ? `projeto-handbanner-frases.html?id=${encodeURIComponent(p.id || "handbanner-frases")}` : isArt ? `projeto-handbanner-artes.html?id=${encodeURIComponent(p.id || "handbanner-artes")}` : projectDetailHref(p);
-        const label = isPhrase ? "Ver projeto" : isArt ? "Ver projeto" : "Ver explicação";
+        const isHandbannerVote = String(p.project_key||"") === "handbanner-votacao";
+        const href = isHandbannerVote ? "votacao-handbanner.html" : isPhrase ? `projeto-handbanner-frases.html?id=${encodeURIComponent(p.id || "handbanner-frases")}` : isArt ? `projeto-handbanner-artes.html?id=${encodeURIComponent(p.id || "handbanner-artes")}` : projectDetailHref(p);
+        const label = isHandbannerVote ? "Votar agora" : isPhrase ? "Ver projeto" : isArt ? "Ver projeto" : "Ver explicação";
         return `<article class="project-card campaign-card glow-card">
           <a href="${href}">${projectImageMarkup(p, "project-image purple-bg ratio-16-9")}</a>
           <span class="status ${statusClass(projectDisplayStatus(p))}">${statusText(projectDisplayStatus(p))}</span>
@@ -345,11 +349,10 @@ async function loadDynamicProjects() {
     );
 
   if (artEnabled) {
-    cards.unshift(`<article class="project-card campaign-card glow-card">
-    <a href="projeto-handbanner-artes.html"><div class="project-image image-cover ratio-16-9" style="background-image:url('https://barmy360.com.br/assets/images/handbannerartcapa.png.PNG')"></div></a>
+    cards.push(`<article class="project-card campaign-card glow-card">
+      <a href="projeto-handbanner-artes.html"><div class="project-image purple-bg ratio-16-9">🎨</div></a>
       <span class="status sending">FASE DE ENVIO</span>
       <h3>${escapeHtml(siteSettings.handbanner_art_title || "Hand Banner - Envio de artes")}</h3>
-      <a href="projeto</div></a>
       <p>${escapeHtml(siteSettings.handbanner_art_text || "Envie sua arte seguindo o edital e o manual de submissão.")}</p>
       <div class="vote-line"><span>Status</span><strong>Publicado</strong></div>
       <a class="btn small primary" href="projeto-handbanner-artes.html">Ver projeto</a>

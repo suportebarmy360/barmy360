@@ -1,0 +1,1 @@
+Correção: removido ON CONFLICT(project_key) dos dados iniciais, porque no Supabase a tabela ainda não existia/índice parcial não aceitava essa forma. Rode sql/00_instalacao.sql em uma aba SQL nova.

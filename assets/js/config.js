@@ -1,7 +1,7 @@
-// Dados do Supabase do projeto BARMY360.
-// Use somente chave pública/publishable no site. Nunca use sb_secret aqui.
-const SUPABASE_URL = "https://aprwsorxusduarjtkphu.supabase.co"; 
-const SUPABASE_ANON_KEY = "sb_publishable_3Mkx5WvdF6uW3I9_sHzC1w_joCWF2ZF";
+// BARMY360 - Supabase novo
+// Chave pública do navegador. NUNCA coloque sb_secret aqui.
+const SUPABASE_URL = "https://menaprzrrftribfyymmq.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_MmOi2CxJoIMsMl7dsr5pHg_GGIh2xfJ";
 
 window.BARMY360_SUPABASE = null;
 

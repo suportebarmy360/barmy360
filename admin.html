@@ -12,6 +12,7 @@
 <script defer src="assets/js/config.js"></script>
 <script defer src="assets/js/main.js"></script>
 <script defer src="assets/js/admin.js"></script>
+<script defer src="assets/js/admin-handbanner.js"></script>
 </head>
 <body class="admin-body">
 <header class="topbar admin-topbar">
@@ -41,6 +42,7 @@
       <button class="tab active" onclick="showAdminTab('posts', this)">Avisos</button>
       <button class="tab" onclick="showAdminTab('projects', this)">Projetos e Votações</button>
       <button class="tab" onclick="showAdminTab('solos', this)">Projetos Individuais</button>
+      <button class="tab" onclick="showAdminTab('handbannerVote', this)">Votação Hand Banner</button>
       <button class="tab" onclick="showAdminTab('artes', this)">Hand Banner Artes</button>
       <button class="tab" onclick="showAdminTab('frases', this)">Frases Recebidas</button>
       <button class="tab" onclick="showAdminTab('ajuda', this)">BARMY Ajuda</button>
@@ -134,6 +136,120 @@
       <section class="admin-card">
         <h2>Projetos cadastrados</h2>
         <div id="adminProjectsList" class="admin-list"></div>
+      </section>
+    </div>
+
+
+    <div id="tab-handbannerVote" class="admin-tab-panel hidden">
+      <section class="admin-card hb-admin-clean-card">
+        <div class="hb-admin-headline">
+          <div>
+            <p class="kicker">MÓDULO EDITÁVEL</p>
+            <h2>Votação de Hand Banner</h2>
+            <p class="admin-help">Monte a página pública em seções separadas: capa, avisos, Frase 1, Frase 2, Frase 3 e confirmação final.</p>
+          </div>
+          <a class="btn outline" href="votacao-handbanner.html" target="_blank">Abrir página pública</a>
+        </div>
+
+        <div class="hb-admin-grid-2">
+          <div class="hb-admin-panel-box">
+            <h3>Card na aba Projetos</h3>
+            <label>Título do card</label>
+            <input id="hbAdmProjectTitle" placeholder="Votação Hand Banner">
+            <label>Descrição do card</label>
+            <textarea id="hbAdmProjectDescription" placeholder="Descrição curta que aparece na página Projetos"></textarea>
+            <label>Capa do card 16:9</label>
+            <input id="hbAdmProjectImage" placeholder="URL da capa do card">
+            <input id="hbAdmProjectImageFile" type="file" accept="image/*" onchange="uploadImageToField('hbAdmProjectImageFile', 'hbAdmProjectImage', 'hbAdmMsg')">
+          </div>
+
+          <div class="hb-admin-panel-box">
+            <h3>Publicação</h3>
+            <label>Quando a página/card deve aparecer?</label>
+            <select id="hbAdmPublished">
+              <option value="false">Não postar ainda / deixar oculto</option>
+              <option value="true">Postar página na aba Projetos</option>
+            </select>
+            <label>Status da votação</label>
+            <select id="hbAdmStatus"><option value="rascunho">Rascunho</option><option value="aberta">Votação aberta</option><option value="fechada">Votação fechada</option></select>
+            <label>Restrição de votos</label>
+            <select id="hbAdmRestrictionMode">
+              <option value="fingerprint">Bloquear nova votação por navegador/dispositivo</option>
+              <option value="strict">Mais rígido: navegador/dispositivo + IP</option>
+              <option value="ip">Bloquear nova votação por IP/rede</option>
+            </select>
+            <label>Limite de escolhas por frase</label>
+            <input id="hbAdmVotesPerPhraseLimit" type="number" min="1" max="20" placeholder="Ex: 1, 2, 3 ou 4">
+            <p class="admin-help">Exemplo: se colocar 4, cada pessoa pode escolher até 4 artes na Frase 1, até 4 na Frase 2 e até 4 na Frase 3. Depois de confirmar, não poderá votar novamente.</p>
+            <p class="admin-help">Recomendado: bloquear por navegador/dispositivo. A opção por IP pode bloquear pessoas diferentes usando a mesma internet.</p>
+            <p class="admin-help">Use “Não postar ainda” enquanto estiver cadastrando as artes. Quando estiver tudo pronto, mude para “Postar página”.</p>
+          </div>
+        </div>
+
+        <div class="hb-admin-panel-box full">
+          <h3>Topo da página pública</h3>
+          <label>Título da página</label>
+          <input id="hbAdmPageTitle" placeholder="Votação de Hand Banner">
+          <label>Descrição sobre a votação</label>
+          <textarea id="hbAdmPageDescription" placeholder="Texto que aparece abaixo do título"></textarea>
+          <label>Foto/capa dentro da página 16:9</label>
+          <input id="hbAdmPageCover" placeholder="URL da imagem de capa">
+          <input id="hbAdmPageCoverFile" type="file" accept="image/*" onchange="uploadImageToField('hbAdmPageCoverFile', 'hbAdmPageCover', 'hbAdmMsg')">
+        </div>
+
+        <div class="hb-admin-panel-box full">
+          <h3>Cards pequenos de avisos importantes</h3>
+          <p class="admin-help">Separe cada card com uma linha em branco. Primeira linha = título do aviso. Linhas seguintes = texto do aviso.</p>
+          <textarea id="hbAdmImportantCards" placeholder="Obrigatório votar nas três frases
+Selecione uma arte em cada seção.
+
+Confirmação final
+O voto só será enviado depois da confirmação."></textarea>
+        </div>
+
+        <div class="hb-admin-panel-box full">
+          <h3>Parte da votação</h3>
+          <label>Título da seção</label>
+          <input id="hbAdmSectionTitle" placeholder="Vote nos Hand Banners">
+          <label>Descrição antes das seções</label>
+          <textarea id="hbAdmSectionDescription" placeholder="É obrigatório escolher 1 hand banner em cada frase."></textarea>
+          <div class="hb-admin-grid-3">
+            <div><label>Texto da Frase 1</label><textarea id="hbAdmPhrase1" placeholder="Frase 1"></textarea></div>
+            <div><label>Texto da Frase 2</label><textarea id="hbAdmPhrase2" placeholder="Frase 2"></textarea></div>
+            <div><label>Texto da Frase 3</label><textarea id="hbAdmPhrase3" placeholder="Frase 3"></textarea></div>
+          </div>
+          <label>Texto da confirmação final</label>
+          <textarea id="hbAdmConfirmText" placeholder="Revise suas escolhas antes de confirmar."></textarea>
+        </div>
+
+        <div class="hb-admin-actions-bar">
+          <button class="btn primary" onclick="hbAdminSavePage()">Salvar página/card</button>
+          <button class="btn outline" onclick="hbAdminUnpublishPage()">Não postar agora</button>
+          <button class="btn primary" onclick="hbAdminPublishPage()">Postar página</button>
+        </div>
+        <p id="hbAdmMsg" class="form-msg"></p>
+      </section>
+
+      <section class="admin-card hb-admin-clean-card">
+        <h2>Adicionar arte em uma frase</h2>
+        <div class="hb-admin-art-add-grid">
+          <div><label>Seção/frase</label><select id="hbAdmArtPhrase"><option value="1">Frase 1</option><option value="2">Frase 2</option><option value="3">Frase 3</option></select></div>
+          <div><label>Ordem</label><input id="hbAdmArtPosition" type="number" placeholder="1, 2, 3"></div>
+          <div><label>Nome da arte</label><input id="hbAdmArtTitle" placeholder="Ex: Arte opção 1"></div>
+        </div>
+        <label>Descrição opcional</label>
+        <textarea id="hbAdmArtDescription" placeholder="Descrição opcional"></textarea>
+        <label>Imagem da arte 16:9</label>
+        <input id="hbAdmArtImage" placeholder="URL da imagem da arte">
+        <input id="hbAdmArtImageFile" type="file" accept="image/*" onchange="uploadImageToField('hbAdmArtImageFile', 'hbAdmArtImage', 'hbAdmArtMsg')">
+        <button class="btn primary" onclick="hbAdminSaveArt()">Adicionar arte</button>
+        <p id="hbAdmArtMsg" class="form-msg"></p>
+      </section>
+
+      <section class="admin-card hb-admin-clean-card">
+        <h2>Artes cadastradas por seção</h2>
+        <p class="admin-help">As artes aparecem para o público separadas por Frase 1, Frase 2 e Frase 3, sempre na ordem definida aqui. Elas não sobem por quantidade de votos.</p>
+        <div id="hbAdmArtsList" class="hb-admin-arts-list"></div>
       </section>
     </div>
 
