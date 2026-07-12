@@ -1,0 +1,14 @@
+OTIMIZAÇÃO DE IMAGENS E CACHE
+
+O que foi alterado:
+- Imagens novas enviadas pelo painel são reduzidas no navegador e convertidas para WebP antes do upload.
+- Uploads novos usam cache de navegador de 1 ano.
+- Artes das votações usam miniaturas transformadas pelo Supabase e carregamento lazy.
+- A votação não baixa mais todas as imagens originais imediatamente.
+
+IMPORTANTE:
+- Não precisa executar SQL.
+- As imagens antigas continuam funcionando, mas o maior ganho acontece nas novas imagens das Fases 2 e 3.
+- Para reduzir também o peso das imagens antigas, reenvie-as pelo painel usando esta versão.
+- Publique todos os arquivos do ZIP, especialmente assets/js/image-optimizer.js, admin.js, votacao-handbanner.js, voting-page.js e style.css.
+- Depois da publicação, faça Ctrl+F5.

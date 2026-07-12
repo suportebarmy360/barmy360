@@ -1,0 +1,13 @@
+HAND BANNER — FASES 2 E 3
+
+1. Antes de publicar os arquivos, abra o Supabase > SQL Editor.
+2. Execute o arquivo sql/04_handbanner_fases_2_3.sql uma única vez.
+3. Publique os arquivos do ZIP.
+4. No painel ADM, use as abas HB Fase 1, HB Fase 2 e HB Fase 3.
+
+REGRAS:
+- Fase 1: mantém a configuração e os votos atuais.
+- Fase 2: exatamente 3 artes por frase, 9 votos no total, sem repetição.
+- Fase 3: exatamente 1 arte por frase, 3 votos no total.
+- Cada fase possui artes, página, publicação e controle de voto próprios.
+- Fases 2 e 3 começam ocultas/como rascunho e só aparecem depois de clicar em Postar página no ADM.
