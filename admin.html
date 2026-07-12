@@ -42,7 +42,9 @@
       <button class="tab active" onclick="showAdminTab('posts', this)">Avisos</button>
       <button class="tab" onclick="showAdminTab('projects', this)">Projetos e Votações</button>
       <button class="tab" onclick="showAdminTab('solos', this)">Projetos Individuais</button>
-      <button class="tab" onclick="showAdminTab('handbannerVote', this)">Votação Hand Banner</button>
+      <button class="tab" onclick="showAdminTab('handbannerVote', this); hbAdminSetPhase(1)">HB Fase 1</button>
+      <button class="tab" onclick="showAdminTab('handbannerVote', this); hbAdminSetPhase(2)">HB Fase 2</button>
+      <button class="tab" onclick="showAdminTab('handbannerVote', this); hbAdminSetPhase(3)">HB Fase 3</button>
       <button class="tab" onclick="showAdminTab('artes', this)">Hand Banner Artes</button>
       <button class="tab" onclick="showAdminTab('frases', this)">Frases Recebidas</button>
       <button class="tab" onclick="showAdminTab('ajuda', this)">BARMY Ajuda</button>
@@ -147,10 +149,10 @@
         <div class="hb-admin-headline">
           <div>
             <p class="kicker">MÓDULO EDITÁVEL</p>
-            <h2>Votação de Hand Banner</h2>
+            <h2 id="hbAdmModuleTitle">Hand Banner — Fase 1</h2>
             <p class="admin-help">Monte a página pública em seções separadas: capa, avisos, Frase 1, Frase 2, Frase 3 e confirmação final.</p>
           </div>
-          <a class="btn outline" href="votacao-handbanner.html" target="_blank">Abrir página pública</a>
+          <a id="hbAdmPublicLink" class="btn outline" href="votacao-handbanner.html" target="_blank">Abrir página pública</a>
         </div>
 
         <div class="hb-admin-grid-2">
@@ -180,8 +182,9 @@
               <option value="strict">Mais rígido: navegador/dispositivo + IP</option>
               <option value="ip">Bloquear nova votação por IP/rede</option>
             </select>
-            <label>Limite de escolhas por frase</label>
+            <label id="hbAdmLimitLabel">Limite de escolhas por frase</label>
             <input id="hbAdmVotesPerPhraseLimit" type="number" min="1" max="20" placeholder="Ex: 1, 2, 3 ou 4">
+            <p id="hbAdmPhaseRule" class="admin-help"></p>
             <p class="admin-help">Exemplo: se colocar 4, cada pessoa pode escolher até 4 artes na Frase 1, até 4 na Frase 2 e até 4 na Frase 3. Depois de confirmar, não poderá votar novamente.</p>
             <p class="admin-help">Recomendado: bloquear por navegador/dispositivo. A opção por IP pode bloquear pessoas diferentes usando a mesma internet.</p>
             <p class="admin-help">Use “Não postar ainda” enquanto estiver cadastrando as artes. Quando estiver tudo pronto, mude para “Postar página”.</p>

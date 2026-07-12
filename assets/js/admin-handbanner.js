@@ -1,5 +1,8 @@
 (function(){
-const HB_KEY="handbanner-votacao";
+let HB_ADMIN_PHASE=1;
+function hbAdminConfig(){const p=HB_ADMIN_PHASE;return {phase:p,key:p===1?"handbanner-votacao":`handbanner-votacao-fase-${p}`,prefix:p===1?"handbanner_vote":`handbanner_vote_phase${p}`,limit:p===2?3:p===3?1:null,page:p===1?"votacao-handbanner.html":`votacao-handbanner-fase-${p}.html`};}
+function hbAdminSetting(s,name,fallback=""){const c=hbAdminConfig();return s[`${c.prefix}_${name}`]??fallback;}
+window.hbAdminSetPhase=async function(phase){HB_ADMIN_PHASE=Number(phase)||1;const c=hbAdminConfig();const title=$id("hbAdmModuleTitle");if(title) title.textContent=`Hand Banner — Fase ${c.phase}`;const link=$id("hbAdmPublicLink");if(link) link.href=c.page;const inp=$id("hbAdmVotesPerPhraseLimit");if(inp){inp.disabled=!!c.limit;inp.value=String(c.limit||inp.value||1);}const rule=$id("hbAdmPhaseRule");if(rule) rule.textContent=c.phase===2?"Regra fixa: exatamente 3 artes em cada frase, totalizando 9 votos, sem repetição.":c.phase===3?"Regra fixa da final: exatamente 1 arte em cada frase, totalizando 3 votos.":"A Fase 1 mantém a regra configurável atual.";await hbLoadAdmin();};
 function $id(id){return document.getElementById(id);} 
 function val(id){return ($id(id)?.value||"").trim();}
 function setVal(id,v){const el=$id(id); if(el) el.value=v||"";}
@@ -7,14 +10,14 @@ function msg(id,t){const el=$id(id); if(el) el.textContent=t||"";}
 function esc(v){return String(v||"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));}
 function sb(){return window.BARMY360_SUPABASE;}
 async function hbGetVotacao(){
-  const {data,error}=await sb().from("votacoes").select("*").eq("project_key",HB_KEY).limit(1);
+  const {data,error}=await sb().from("votacoes").select("*").eq("project_key",hbAdminConfig().key).limit(1);
   if(error) throw error;
   return (data||[])[0]||null;
 }
 async function hbEnsureVotacao(){
   let v=await hbGetVotacao();
   if(v) return v;
-  const item={project_key:HB_KEY,titulo:val("hbAdmPageTitle")||"Votação Hand Banner",descricao:val("hbAdmPageDescription")||"Escolha uma arte para cada frase.",status:val("hbAdmStatus")||"aberta",fase:"handbanner",mostrar_ranking:false};
+  const item={project_key:hbAdminConfig().key,titulo:val("hbAdmPageTitle")||"Votação Hand Banner",descricao:val("hbAdmPageDescription")||"Escolha uma arte para cada frase.",status:val("hbAdmStatus")||"aberta",fase:`handbanner-fase-${HB_ADMIN_PHASE}`,mostrar_ranking:false};
   const {data,error}=await sb().from("votacoes").insert(item).select().single();
   if(error) throw error;
   return data;
@@ -24,27 +27,27 @@ async function hbLoadAdmin(){
   try{
     const [{data:settings},{data:projects},v]=await Promise.all([
       sb().from("site_settings").select("*").eq("id",1).maybeSingle(),
-      sb().from("projects").select("*").eq("project_key",HB_KEY).limit(1),
+      sb().from("projects").select("*").eq("project_key",hbAdminConfig().key).limit(1),
       hbGetVotacao().catch(()=>null)
     ]);
     const s=settings||{}, p=(projects||[])[0]||{};
-    setVal("hbAdmProjectTitle",p.title||"Votação Hand Banner");
+    setVal("hbAdmProjectTitle",p.title||`Hand Banner — Fase ${HB_ADMIN_PHASE}`);
     setVal("hbAdmProjectDescription",p.description||"Vote nas artes oficiais do hand banner.");
-    setVal("hbAdmProjectImage",p.image_url||s.handbanner_vote_card_image||"");
-    setVal("hbAdmPageTitle",s.handbanner_vote_title||(v&&v.titulo)||"Votação do Hand Banner");
-    setVal("hbAdmPageDescription",s.handbanner_vote_description||(v&&v.descricao)||"Escolha uma arte para cada frase. O voto só será enviado depois da confirmação final.");
-    setVal("hbAdmPageCover",s.handbanner_vote_cover_image||"");
-    setVal("hbAdmSectionTitle",s.handbanner_vote_section_title||"Escolha 1 arte em cada frase");
-    setVal("hbAdmSectionDescription",s.handbanner_vote_section_description||"É obrigatório votar nas três frases para confirmar.");
-    setVal("hbAdmImportantCards",s.handbanner_vote_important_cards||"Obrigatório votar nas três frases\nSelecione uma arte em cada seção antes de confirmar.\n\nConfirmação final\nO voto só é enviado após clicar em Confirmar votos.");
-    setVal("hbAdmConfirmText",s.handbanner_vote_confirm_text||"Revise suas escolhas antes de confirmar. Depois de enviado, o voto não poderá ser alterado.");
-    setVal("hbAdmPhrase1",s.handbanner_vote_phrase_1||"Frase 1");
-    setVal("hbAdmPhrase2",s.handbanner_vote_phrase_2||"Frase 2");
-    setVal("hbAdmPhrase3",s.handbanner_vote_phrase_3||"Frase 3");
+    setVal("hbAdmProjectImage",p.image_url||hbAdminSetting(s,"card_image")||"");
+    setVal("hbAdmPageTitle",hbAdminSetting(s,"title")||(v&&v.titulo)||`Hand Banner — Fase ${HB_ADMIN_PHASE}`);
+    setVal("hbAdmPageDescription",hbAdminSetting(s,"description")||(v&&v.descricao)||"Escolha uma arte para cada frase. O voto só será enviado depois da confirmação final.");
+    setVal("hbAdmPageCover",hbAdminSetting(s,"cover_image")||"");
+    setVal("hbAdmSectionTitle",hbAdminSetting(s,"section_title")||"Escolha 1 arte em cada frase");
+    setVal("hbAdmSectionDescription",hbAdminSetting(s,"section_description")||"É obrigatório votar nas três frases para confirmar.");
+    setVal("hbAdmImportantCards",hbAdminSetting(s,"important_cards")||"Obrigatório votar nas três frases\nSelecione uma arte em cada seção antes de confirmar.\n\nConfirmação final\nO voto só é enviado após clicar em Confirmar votos.");
+    setVal("hbAdmConfirmText",hbAdminSetting(s,"confirm_text")||"Revise suas escolhas antes de confirmar. Depois de enviado, o voto não poderá ser alterado.");
+    setVal("hbAdmPhrase1",hbAdminSetting(s,"phrase_1")||"Frase 1");
+    setVal("hbAdmPhrase2",hbAdminSetting(s,"phrase_2")||"Frase 2");
+    setVal("hbAdmPhrase3",hbAdminSetting(s,"phrase_3")||"Frase 3");
     setVal("hbAdmStatus",(v&&v.status)||"rascunho");
-    setVal("hbAdmRestrictionMode", s.handbanner_vote_restriction_mode || "fingerprint");
-    setVal("hbAdmVotesPerPhraseLimit", String(s.handbanner_vote_limit_per_phrase || 1));
-    setVal("hbAdmPublished", String(s.handbanner_vote_published ?? false));
+    setVal("hbAdmRestrictionMode", hbAdminSetting(s,"restriction_mode") || "fingerprint");
+    setVal("hbAdmVotesPerPhraseLimit", String(hbAdminConfig().limit || hbAdminSetting(s,"limit_per_phrase",1)));
+    setVal("hbAdmPublished", String(hbAdminSetting(s,"published") ?? false));
     await hbAdminRenderArts();
   }catch(e){msg("hbAdmMsg","Erro ao carregar: "+e.message);}
 }
@@ -54,32 +57,35 @@ window.hbAdminSavePage=async function(){
     const title=val("hbAdmPageTitle")||"Votação Hand Banner";
     const desc=val("hbAdmPageDescription")||"Escolha uma arte para cada frase.";
     const status=val("hbAdmStatus")||"aberta";
-    const {error:settingsError}=await sb().from("site_settings").upsert({
-      id:1,
-      handbanner_vote_title:title,
-      handbanner_vote_description:desc,
-      handbanner_vote_cover_image:val("hbAdmPageCover"),
-      handbanner_vote_card_image:val("hbAdmProjectImage"),
-      handbanner_vote_section_title:val("hbAdmSectionTitle"),
-      handbanner_vote_section_description:val("hbAdmSectionDescription"),
-      handbanner_vote_important_cards:val("hbAdmImportantCards"),
-      handbanner_vote_confirm_text:val("hbAdmConfirmText"),
-      handbanner_vote_phrase_1:val("hbAdmPhrase1")||"Frase 1",
-      handbanner_vote_phrase_2:val("hbAdmPhrase2")||"Frase 2",
-      handbanner_vote_phrase_3:val("hbAdmPhrase3")||"Frase 3",
-      handbanner_vote_published: val("hbAdmPublished")==="true",
-      handbanner_vote_restriction_mode: val("hbAdmRestrictionMode")||"fingerprint",
-      handbanner_vote_limit_per_phrase: Math.max(1, Math.min(20, Number(val("hbAdmVotesPerPhraseLimit") || 1))),
-      handbanner_vote_restriction_label: ({fingerprint:"1 voto por navegador/dispositivo", strict:"Mais rígido: navegador/dispositivo + IP", ip:"1 voto por IP/rede"}[val("hbAdmRestrictionMode")||"fingerprint"])
-    },{onConflict:"id"});
+    const c=hbAdminConfig();
+    const settingsPayload={id:1};
+    Object.assign(settingsPayload,{
+      [`${c.prefix}_title`]:title,
+      [`${c.prefix}_description`]:desc,
+      [`${c.prefix}_cover_image`]:val("hbAdmPageCover"),
+      [`${c.prefix}_card_image`]:val("hbAdmProjectImage"),
+      [`${c.prefix}_section_title`]:val("hbAdmSectionTitle"),
+      [`${c.prefix}_section_description`]:val("hbAdmSectionDescription"),
+      [`${c.prefix}_important_cards`]:val("hbAdmImportantCards"),
+      [`${c.prefix}_confirm_text`]:val("hbAdmConfirmText"),
+      [`${c.prefix}_phrase_1`]:val("hbAdmPhrase1")||"Frase 1",
+      [`${c.prefix}_phrase_2`]:val("hbAdmPhrase2")||"Frase 2",
+      [`${c.prefix}_phrase_3`]:val("hbAdmPhrase3")||"Frase 3",
+      [`${c.prefix}_published`]: val("hbAdmPublished")==="true",
+      [`${c.prefix}_restriction_mode`]: val("hbAdmRestrictionMode")||"fingerprint",
+      [`${c.prefix}_limit_per_phrase`]: Math.max(1, Math.min(20, Number(val("hbAdmVotesPerPhraseLimit") || 1))),
+      [`${c.prefix}_restriction_label`]: ({fingerprint:"1 voto por navegador/dispositivo", strict:"Mais rígido: navegador/dispositivo + IP", ip:"1 voto por IP/rede"}[val("hbAdmRestrictionMode")||"fingerprint"])
+    });
+    if(c.limit) settingsPayload[`${c.prefix}_limit_per_phrase`]=c.limit;
+    const {error:settingsError}=await sb().from("site_settings").upsert(settingsPayload,{onConflict:"id"});
     if(settingsError) throw settingsError;
     const published=val("hbAdmPublished")==="true";
-    const project={project_key:HB_KEY,title:val("hbAdmProjectTitle")||title,description:val("hbAdmProjectDescription")||desc,details:desc,image_url:val("hbAdmProjectImage"),status:published?"em_votacao":"rascunho",voting_open:published && status==="aberta"};
-    const {data:existing,error:pe}=await sb().from("projects").select("id").eq("project_key",HB_KEY).limit(1); if(pe) throw pe;
+    const project={project_key:hbAdminConfig().key,title:val("hbAdmProjectTitle")||title,description:val("hbAdmProjectDescription")||desc,details:desc,image_url:val("hbAdmProjectImage"),status:published?"em_votacao":"rascunho",voting_open:published && status==="aberta"};
+    const {data:existing,error:pe}=await sb().from("projects").select("id").eq("project_key",hbAdminConfig().key).limit(1); if(pe) throw pe;
     const pq=(existing&&existing.length)?sb().from("projects").update(project).eq("id",existing[0].id):sb().from("projects").insert(project);
     const {error:projectError}=await pq; if(projectError) throw projectError;
     let v=await hbGetVotacao();
-    const vot={project_key:HB_KEY,titulo:title,descricao:desc,status:status,fase:"handbanner",mostrar_ranking:false};
+    const vot={project_key:hbAdminConfig().key,titulo:title,descricao:desc,status:status,fase:`handbanner-fase-${HB_ADMIN_PHASE}`,mostrar_ranking:false};
     const vq=v?sb().from("votacoes").update(vot).eq("id",v.id):sb().from("votacoes").insert(vot);
     const {error:vError}=await vq; if(vError) throw vError;
     msg("hbAdmMsg","Página, card e votação salvos."); await hbLoadAdmin();

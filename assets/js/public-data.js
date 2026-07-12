@@ -162,6 +162,8 @@ function projectDisplayStatus(p) {
 
 function projectDetailHref(p) {
   if (String(p?.project_key||"") === "handbanner-votacao") return "votacao-handbanner.html";
+  if (String(p?.project_key||"") === "handbanner-votacao-fase-2") return "votacao-handbanner-fase-2.html";
+  if (String(p?.project_key||"") === "handbanner-votacao-fase-3") return "votacao-handbanner-fase-3.html";
   if (projectIsHandbannerArts(p)) return `projeto-handbanner-artes.html?id=${encodeURIComponent(p.id || "handbanner-artes")}`;
   if (projectIsHandbannerPhrases(p)) return `projeto-handbanner-frases.html?id=${encodeURIComponent(p.id || "handbanner-frases")}`;
   return `projeto-detalhe.html?id=${encodeURIComponent(p.id)}`;
@@ -327,15 +329,15 @@ async function loadDynamicProjects() {
 
   const siteSettings = await getPublicSiteSettings();
   const artEnabled = !!siteSettings.handbanner_art_enabled;
-  const visibleProjects = projects.filter(p => String(p.project_key||"") !== "handbanner-votacao" || String(p.status||"") !== "rascunho");
+  const visibleProjects = projects.filter(p => !String(p.project_key||"").startsWith("handbanner-votacao") || String(p.status||"") !== "rascunho");
   const cards = visibleProjects
     .slice(0, 12)
     .map(
       (p) => {
         const isPhrase = projectIsHandbannerPhrases(p);
         const isArt = projectIsHandbannerArts(p);
-        const isHandbannerVote = String(p.project_key||"") === "handbanner-votacao";
-        const href = isHandbannerVote ? "votacao-handbanner.html" : isPhrase ? `projeto-handbanner-frases.html?id=${encodeURIComponent(p.id || "handbanner-frases")}` : isArt ? `projeto-handbanner-artes.html?id=${encodeURIComponent(p.id || "handbanner-artes")}` : projectDetailHref(p);
+        const isHandbannerVote = String(p.project_key||"").startsWith("handbanner-votacao");
+        const href = isHandbannerVote ? projectDetailHref(p) : isPhrase ? `projeto-handbanner-frases.html?id=${encodeURIComponent(p.id || "handbanner-frases")}` : isArt ? `projeto-handbanner-artes.html?id=${encodeURIComponent(p.id || "handbanner-artes")}` : projectDetailHref(p);
         const label = isHandbannerVote ? "Votar agora" : isPhrase ? "Ver projeto" : isArt ? "Ver projeto" : "Ver explicação";
         return `<article class="project-card campaign-card glow-card">
           <a href="${href}">${projectImageMarkup(p, "project-image purple-bg ratio-16-9")}</a>
