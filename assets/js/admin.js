@@ -1690,3 +1690,99 @@ projectStatusSelectAdmin = function(p){
 };
 
 document.addEventListener('DOMContentLoaded', barmyFillSoloStatusSelects);
+
+
+/* ===== Painel de estatísticas: votos, pessoas e acessos ===== */
+function metricNumber(value){ return Number(value || 0).toLocaleString('pt-BR'); }
+function metricDate(value){
+  if(!value) return '—';
+  try { return new Date(value).toLocaleString('pt-BR'); } catch(e){ return '—'; }
+}
+function uniqueNonEmpty(values){ return new Set((values||[]).map(v=>String(v||'').trim()).filter(Boolean)).size; }
+async function metricFetchAll(table, columns){
+  const rows=[]; let from=0; const pageSize=1000;
+  while(true){
+    const {data,error}=await sb().from(table).select(columns).range(from,from+pageSize-1);
+    if(error) throw error;
+    rows.push(...(data||[]));
+    if(!data || data.length<pageSize) break;
+    from+=pageSize;
+  }
+  return rows;
+}
+async function loadMetricsDashboard(){
+  const msg=document.getElementById('metricsMsg');
+  const summary=document.getElementById('metricsSummary');
+  const projectsEl=document.getElementById('metricsProjects');
+  const pagesEl=document.getElementById('metricsPages');
+  if(!summary || !projectsEl || !pagesEl) return;
+  if(!sb()){
+    if(msg) msg.textContent='Supabase não conectado. Confira assets/js/config.js.';
+    return;
+  }
+  if(msg) msg.textContent='Carregando estatísticas...';
+  summary.innerHTML='<p>Carregando...</p>'; projectsEl.innerHTML=''; pagesEl.innerHTML='';
+  try{
+    const [projects,votacoes,opcoes,votos,accesses]=await Promise.all([
+      metricFetchAll('projects','id,project_key,title'),
+      metricFetchAll('votacoes','id,titulo,project_key,status'),
+      metricFetchAll('opcoes_votacao','id,votacao_id,titulo,votos_count,votos'),
+      metricFetchAll('votos_opcao','id,votacao_id,opcao_id,voter_fingerprint,voter_ip,created_at'),
+      metricFetchAll('site_accesses','id,page_path,visitor_fingerprint,created_at')
+    ]);
+    const participantKey=v=>String(v.voter_fingerprint||v.voter_ip||'').trim();
+    const totalPeople=uniqueNonEmpty(votos.map(participantKey));
+    const totalVisitors=uniqueNonEmpty(accesses.map(a=>a.visitor_fingerprint));
+    summary.innerHTML=[
+      ['Acessos ao site',accesses.length],
+      ['Visitantes únicos',totalVisitors],
+      ['Pessoas que votaram',totalPeople],
+      ['Votos registrados',votos.length]
+    ].map(([label,n])=>`<article class="metric-summary-card"><span>${escapeHtml(label)}</span><strong>${metricNumber(n)}</strong></article>`).join('');
+
+    const projectByKey=new Map(projects.map(p=>[String(p.project_key||''),p]));
+    const voteGroups=votacoes.map(vot=>{
+      const project=projectByKey.get(String(vot.project_key||''));
+      const voteRows=votos.filter(v=>String(v.votacao_id)===String(vot.id));
+      const optionRows=opcoes.filter(o=>String(o.votacao_id)===String(vot.id));
+      const people=uniqueNonEmpty(voteRows.map(participantKey));
+      return {vot, project, voteRows, optionRows, people};
+    }).sort((a,b)=>b.voteRows.length-a.voteRows.length);
+    projectsEl.innerHTML=voteGroups.length?voteGroups.map(g=>{
+      const optionLines=g.optionRows.map(o=>{
+        const realCount=g.voteRows.filter(v=>String(v.opcao_id)===String(o.id)).length;
+        const count=realCount || Number(o.votos_count||o.votos||0);
+        return `<div class="metric-option-row"><span>${escapeHtml(o.titulo||'Opção')}</span><strong>${metricNumber(count)} voto(s)</strong></div>`;
+      }).join('');
+      return `<article class="metric-project-card">
+        <div class="metric-project-head"><div><h3>${escapeHtml(g.project?.title||g.vot.titulo||'Votação')}</h3><small>${escapeHtml(g.vot.status||'')}</small></div><div class="metric-project-totals"><span><b>${metricNumber(g.people)}</b> pessoa(s)</span><span><b>${metricNumber(g.voteRows.length)}</b> voto(s)</span></div></div>
+        <div class="metric-options-list">${optionLines||'<p>Nenhuma opção cadastrada.</p>'}</div>
+      </article>`;
+    }).join(''):'<p>Nenhuma votação cadastrada.</p>';
+
+    const pageMap=new Map();
+    accesses.forEach(a=>{
+      const page=a.page_path||'Página desconhecida';
+      if(!pageMap.has(page)) pageMap.set(page,{page,views:0,visitors:new Set(),last:null});
+      const row=pageMap.get(page); row.views++;
+      if(a.visitor_fingerprint) row.visitors.add(a.visitor_fingerprint);
+      if(!row.last || new Date(a.created_at)>new Date(row.last)) row.last=a.created_at;
+    });
+    const pageRows=[...pageMap.values()].sort((a,b)=>b.views-a.views);
+    pagesEl.innerHTML=pageRows.length?`<table class="metrics-table"><thead><tr><th>Página</th><th>Acessos</th><th>Visitantes</th><th>Último acesso</th></tr></thead><tbody>${pageRows.map(r=>`<tr><td>${escapeHtml(r.page)}</td><td>${metricNumber(r.views)}</td><td>${metricNumber(r.visitors.size)}</td><td>${escapeHtml(metricDate(r.last))}</td></tr>`).join('')}</tbody></table>`:'<p>Ainda não há acessos registrados. Eles começarão a aparecer após publicar esta versão e rodar o SQL incluído no ZIP.</p>';
+    if(msg) msg.textContent='Estatísticas atualizadas.';
+  }catch(error){
+    console.error(error);
+    if(msg) msg.textContent='Erro ao carregar estatísticas: '+(error.message||error)+' — rode o arquivo sql/03_estatisticas.sql no Supabase.';
+    summary.innerHTML=''; projectsEl.innerHTML=''; pagesEl.innerHTML='';
+  }
+}
+window.loadMetricsDashboard=loadMetricsDashboard;
+
+function showMetricsSection(section, button) {
+  document.querySelectorAll('.metrics-section').forEach((el) => el.classList.add('hidden'));
+  document.getElementById(`metrics-section-${section}`)?.classList.remove('hidden');
+  document.querySelectorAll('.metrics-inner-tab').forEach((el) => el.classList.remove('active'));
+  button?.classList.add('active');
+}
+window.showMetricsSection = showMetricsSection;

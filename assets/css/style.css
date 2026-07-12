@@ -2746,3 +2746,27 @@ input, textarea, select, button { font: inherit; }
 /* contador de votos nos cards da votação hand banner */
 .hb-vote-counter{margin:14px 0 12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);}
 .hb-vote-counter strong{font-size:1.15rem;}
+
+
+/* Painel de estatísticas */
+.metrics-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}
+.metric-summary-card{padding:18px;border:1px solid rgba(133,77,255,.28);border-radius:18px;background:linear-gradient(145deg,rgba(121,64,220,.13),rgba(255,255,255,.04));display:flex;flex-direction:column;gap:8px}
+.metric-summary-card span{font-size:.86rem;opacity:.78}.metric-summary-card strong{font-size:2rem;line-height:1}
+.metrics-projects-list{display:grid;gap:16px}.metric-project-card{border:1px solid rgba(133,77,255,.24);border-radius:18px;padding:18px;background:rgba(255,255,255,.035)}
+.metric-project-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:14px}.metric-project-head h3{margin:0 0 4px}.metric-project-totals{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.metric-project-totals span{padding:8px 11px;border-radius:999px;background:rgba(126,73,220,.16);white-space:nowrap}
+.metric-options-list{display:grid;gap:8px}.metric-option-row{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.045)}
+.metrics-table-wrap{overflow-x:auto}.metrics-table{width:100%;border-collapse:collapse;min-width:620px}.metrics-table th,.metrics-table td{text-align:left;padding:12px;border-bottom:1px solid rgba(133,77,255,.18)}.metrics-table th{font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;opacity:.75}
+@media(max-width:900px){.metrics-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.metric-project-head{flex-direction:column}.metric-project-totals{justify-content:flex-start}}
+@media(max-width:520px){.metrics-summary-grid{grid-template-columns:1fr}.metric-option-row{flex-direction:column;gap:5px}}
+
+/* Área exclusiva de estatísticas no painel ADM */
+.admin-tabs-separator{display:block;flex-basis:100%;height:0;margin:2px 0}
+.tab-metrics-main{font-weight:800;border-color:rgba(183,126,255,.55)!important;background:linear-gradient(135deg,rgba(119,62,220,.2),rgba(230,83,191,.15))!important}
+.metrics-area{max-width:1180px;margin-inline:auto}
+.metrics-hero{border:1px solid rgba(166,103,255,.38);background:linear-gradient(145deg,rgba(83,34,158,.18),rgba(255,255,255,.035))}
+.metrics-inner-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid rgba(155,96,255,.2)}
+.metrics-inner-tab{border:1px solid rgba(154,93,255,.3);background:rgba(255,255,255,.04);color:inherit;border-radius:999px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer;transition:.2s ease}
+.metrics-inner-tab:hover,.metrics-inner-tab.active{background:linear-gradient(135deg,rgba(117,65,218,.42),rgba(222,73,184,.25));border-color:rgba(183,126,255,.75);transform:translateY(-1px)}
+.metrics-section{animation:metricsFade .18s ease}
+@keyframes metricsFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(max-width:620px){.metrics-inner-tabs{display:grid;grid-template-columns:1fr}.metrics-inner-tab{width:100%}}

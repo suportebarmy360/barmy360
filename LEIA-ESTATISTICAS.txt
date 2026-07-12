@@ -1,0 +1,16 @@
+ESTATÍSTICAS ADICIONADAS AO PAINEL ADM
+
+1. No Supabase, abra SQL Editor.
+2. Rode o arquivo sql/03_estatisticas.sql inteiro.
+3. Publique todos os arquivos desta versão no seu site.
+4. Entre em /admin.html e abra a aba Estatísticas.
+
+A aba mostra:
+- total de acessos ao site;
+- visitantes únicos estimados por navegador/dispositivo;
+- total de pessoas que votaram;
+- total de votos registrados;
+- votos por projeto e por opção;
+- acessos e visitantes por página.
+
+IMPORTANTE: os acessos começam a ser contados depois que esta versão for publicada. Os votos antigos já aparecem porque são lidos da tabela votos_opcao existente.

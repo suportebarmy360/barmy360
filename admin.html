@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20260617-mobile-device">
+<link rel="stylesheet" href="assets/css/style.css?v=20260711-metrics-tabs">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script defer src="assets/js/config.js"></script>
 <script defer src="assets/js/main.js"></script>
@@ -49,6 +49,8 @@
       <button class="tab" onclick="showAdminTab('stream', this)">Stream</button>
       <button class="tab" onclick="showAdminTab('docs', this)">Docs/Cronogramas</button>
       <button class="tab" onclick="showAdminTab('site', this)">Configurações</button>
+      <span class="admin-tabs-separator" aria-hidden="true"></span>
+      <button class="tab tab-metrics-main" onclick="showAdminTab('metrics', this); loadMetricsDashboard()">📊 Estatísticas</button>
       <button class="tab" onclick="adminLogout()">Sair</button>
     </div>
     <div id="tab-posts" class="admin-tab-panel">
@@ -502,6 +504,50 @@ O voto só será enviado depois da confirmação."></textarea>
         <p id="hbAdminMsg" class="form-msg"></p>
       </section>
       <section class="admin-card"><h2>Lista de envios</h2><div id="adminHBSubmissionsList" class="admin-list"></div></section>
+    </div>
+
+
+    <div id="tab-metrics" class="admin-tab-panel hidden metrics-area">
+      <section class="admin-card metrics-dashboard-card metrics-hero">
+        <div class="admin-card-head">
+          <div>
+            <p class="kicker">RELATÓRIOS DO SITE</p>
+            <h2>Estatísticas</h2>
+            <p class="admin-help">Esta área é somente para consulta. Ela não altera votos, projetos ou configurações do site.</p>
+          </div>
+          <button class="btn outline" onclick="loadMetricsDashboard()">Atualizar dados</button>
+        </div>
+        <p id="metricsMsg" class="form-msg"></p>
+        <div class="metrics-inner-tabs" role="tablist">
+          <button class="metrics-inner-tab active" onclick="showMetricsSection('summary', this)">Resumo geral</button>
+          <button class="metrics-inner-tab" onclick="showMetricsSection('votes', this)">Votos por projeto</button>
+          <button class="metrics-inner-tab" onclick="showMetricsSection('access', this)">Acessos do site</button>
+        </div>
+      </section>
+
+      <div id="metrics-section-summary" class="metrics-section">
+        <section class="admin-card">
+          <h2>Visão geral</h2>
+          <p class="admin-help">Totais consolidados de participação, votos e acessos.</p>
+          <div id="metricsSummary" class="metrics-summary-grid"></div>
+        </section>
+      </div>
+
+      <div id="metrics-section-votes" class="metrics-section hidden">
+        <section class="admin-card">
+          <h2>Votos por projeto</h2>
+          <p class="admin-help">“Pessoas” conta cada navegador/dispositivo uma vez dentro de cada votação. “Votos” soma todas as opções escolhidas.</p>
+          <div id="metricsProjects" class="metrics-projects-list"></div>
+        </section>
+      </div>
+
+      <div id="metrics-section-access" class="metrics-section hidden">
+        <section class="admin-card">
+          <h2>Acessos por página</h2>
+          <p class="admin-help">Cada carregamento de página é contado como um acesso. Visitantes únicos são estimados pelo navegador/dispositivo.</p>
+          <div id="metricsPages" class="metrics-table-wrap"></div>
+        </section>
+      </div>
     </div>
 
     <div id="tab-site" class="admin-tab-panel hidden">
