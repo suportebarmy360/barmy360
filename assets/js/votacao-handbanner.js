@@ -5,13 +5,14 @@ function hbFingerprint(){const k=`barmy360_handbanner_voter_fase_${HB_PHASE}`;le
 const HB_PHASE=Number(document.body?.dataset?.hbPhase||1);
 const HB_KEY=HB_PHASE===1?"handbanner-votacao":`handbanner-votacao-fase-${HB_PHASE}`;
 const HB_PREFIX=HB_PHASE===1?"handbanner_vote":`handbanner_vote_phase${HB_PHASE}`;
-let hbState={settings:null,votacao:null,opcoes:[],selected:{1:[],2:[],3:[]},published:false};
+let hbState={settings:null,votacao:null,opcoes:[],selected:{1:[],2:[],3:[]},published:false,activePhrase:1,pages:{1:1,2:1,3:1}};
+const HB_ITEMS_PER_PAGE=20;
 
 function hbImageUrl(url){ return String(url||"").trim(); }
 function hbImage(url, cls=""){
   const img=hbImageUrl(url);
   if(!img) return `<div class="hb-art-image ${cls} purple-bg">BARMY360</div>`;
-  if(img.startsWith("http") || img.startsWith("assets/")) return `<div class="hb-art-image ${cls}" style="background-image:url('${hbAttr(img)}')"></div>`;
+  if(img.startsWith("http") || img.startsWith("assets/")){ const src=window.BARMY_IMAGE?BARMY_IMAGE.optimizedUrl(img,900,66):img; return `<div class="hb-art-image ${cls}"><img src="${hbAttr(src)}" alt="" loading="lazy" decoding="async" fetchpriority="low"></div>`; }
   return `<div class="hb-art-image ${cls} purple-bg">${hbEsc(img)}</div>`;
 }
 function hbSplitCards(text){
@@ -58,34 +59,54 @@ function hbRenderTopOnly(){
 }
 function hbRender(){
   hbRenderTopOnly();
-  const s=hbState.settings||{};
   document.getElementById("hbVoteSectionTitle").textContent=hbSetting("section_title")||"Vote nos Hand Banners";
   const limit=hbLimit();
-  document.getElementById("hbVoteSectionDescription").textContent=hbSetting("section_description")||(hbExact()?`É obrigatório escolher exatamente ${limit} arte${limit>1?"s":""} em cada frase (${limit*3} votos no total).`:(limit===1?"É obrigatório escolher 1 hand banner em cada frase.":`Escolha de 1 até ${limit} hand banners em cada frase.`));
+  document.getElementById("hbVoteSectionDescription").textContent=hbSetting("section_description")||(hbExact()?`É obrigatório escolher exatamente ${limit} arte${limit>1?"s":""} em cada frase (${limit*3} votos no total). É carregada somente uma frase por vez, com até ${HB_ITEMS_PER_PAGE} artes, para economizar internet.`:(limit===1?"É obrigatório escolher 1 hand banner em cada frase.":`Escolha de 1 até ${limit} hand banners em cada frase.`));
   document.getElementById("hbConfirmText").textContent=hbSetting("confirm_text")||"Revise suas escolhas antes de confirmar. Depois de enviado, o voto não poderá ser alterado.";
-  document.getElementById("hbVotingSections").innerHTML=[1,2,3].map(n=>hbRenderPhraseSection(n)).join("");
-  document.querySelectorAll(".hb-option-card").forEach(card=>card.addEventListener("click",()=>hbSelectOption(card.dataset.frase, card.dataset.id)));
+  hbRenderActivePhrase();
   hbRenderReview();
 }
+function hbRenderActivePhrase(){
+  const root=document.getElementById("hbVotingSections");
+  if(!root) return;
+  const active=Number(hbState.activePhrase||1);
+  root.innerHTML=`<nav class="hb-phrase-tabs" aria-label="Frases da votação">${[1,2,3].map(n=>{const count=(hbState.selected[n]||[]).length;return `<button type="button" class="hb-phrase-tab ${n===active?'active':''} ${count?'has-selection':''}" data-hb-open-phrase="${n}"><span>Frase ${n}</span><small>${count}/${hbLimit()} escolhida(s)</small></button>`}).join('')}</nav>${hbRenderPhraseSection(active)}`;
+  root.querySelectorAll('[data-hb-open-phrase]').forEach(btn=>btn.addEventListener('click',()=>hbOpenPhrase(Number(btn.dataset.hbOpenPhrase))));
+  root.querySelectorAll('.hb-option-card').forEach(card=>card.addEventListener('click',()=>hbSelectOption(card.dataset.frase,card.dataset.id)));
+  root.querySelectorAll('[data-hb-page]').forEach(btn=>btn.addEventListener('click',()=>hbChangePage(active,Number(btn.dataset.hbPage))));
+}
+function hbOpenPhrase(n){
+  hbState.activePhrase=Math.max(1,Math.min(3,Number(n)||1));
+  hbRenderActivePhrase();
+  document.getElementById(`hbPhrase${hbState.activePhrase}`)?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function hbChangePage(frase,page){
+  const total=hbState.opcoes.filter(o=>Number(o.hb_frase||1)===frase).length;
+  const max=Math.max(1,Math.ceil(total/HB_ITEMS_PER_PAGE));
+  hbState.pages[frase]=Math.max(1,Math.min(max,page));
+  hbRenderActivePhrase();
+  document.getElementById(`hbPhrase${frase}`)?.scrollIntoView({behavior:'smooth',block:'start'});
+}
 function hbRenderPhraseSection(n){
-  const list=hbState.opcoes.filter(o=>Number(o.hb_frase||1)===n);
+  const all=hbState.opcoes.filter(o=>Number(o.hb_frase||1)===n);
   const selectedIds=hbState.selected[n]||[];
   const phraseTitle=hbPhraseLabel(n);
   const limit=hbLimit();
   const selectedCount=selectedIds.length;
+  const totalPages=Math.max(1,Math.ceil(all.length/HB_ITEMS_PER_PAGE));
+  const page=Math.max(1,Math.min(totalPages,Number(hbState.pages[n]||1)));
+  hbState.pages[n]=page;
+  const from=(page-1)*HB_ITEMS_PER_PAGE;
+  const list=all.slice(from,from+HB_ITEMS_PER_PAGE);
+  const pagination=totalPages>1?`<div class="hb-pagination"><button type="button" class="btn small outline" data-hb-page="${page-1}" ${page<=1?'disabled':''}>← Anterior</button><span>Página <strong>${page}</strong> de ${totalPages} · ${all.length} artes</span><button type="button" class="btn small outline" data-hb-page="${page+1}" ${page>=totalPages?'disabled':''}>Próxima →</button></div>`:'';
   return `<section class="hb-public-phrase-section glow-card" id="hbPhrase${n}">
     <div class="hb-public-phrase-header">
-      <div>
-        <span class="hb-step">FRASE ${n}</span>
-        <h2>Frase:</h2>
-        <p class="hb-phrase-text">${hbEsc(phraseTitle)}</p>
-        <p class="hb-required">${hbExact()?`Obrigatório escolher exatamente ${limit} arte${limit>1?"s":""} nesta frase.`:`Obrigatório escolher pelo menos 1 hand banner. Limite desta seção: ${limit}.`}</p>
-      </div>
+      <div><span class="hb-step">FRASE ${n}</span><h2>Frase:</h2><p class="hb-phrase-text">${hbEsc(phraseTitle)}</p><p class="hb-required">${hbExact()?`Obrigatório escolher exatamente ${limit} arte${limit>1?"s":""} nesta frase.`:`Obrigatório escolher pelo menos 1 hand banner. Limite desta seção: ${limit}.`}</p></div>
       <div class="hb-section-status ${selectedCount?'done':'pending'}">${selectedCount?`${selectedCount}/${limit} escolhido(s)`:'Pendente'}</div>
     </div>
-    <div class="hb-public-options-grid">
-      ${list.length?list.map(o=>hbRenderOptionCard(n,o)).join(""):`<article class="hb-public-option-card"><h3>Nenhuma arte cadastrada</h3><p>Adicione as artes desta frase no painel ADM.</p></article>`}
-    </div>
+    ${pagination}
+    <div class="hb-public-options-grid">${list.length?list.map(o=>hbRenderOptionCard(n,o)).join(""):`<article class="hb-public-option-card"><h3>Nenhuma arte cadastrada</h3><p>Adicione as artes desta frase no painel ADM.</p></article>`}</div>
+    ${pagination}
   </section>`;
 }
 function hbRenderOptionCard(n,o){
@@ -118,7 +139,8 @@ function hbSelectOption(frase,id){
     arr.push(id);
   }
   hbState.selected[frase]=arr;
-  hbRender();
+  hbRenderActivePhrase();
+  hbRenderReview();
 }
 function hbRenderReview(){
   const limit=hbLimit();
@@ -126,7 +148,7 @@ function hbRenderReview(){
   const review=document.getElementById("hbReviewList");
   review.innerHTML=[1,2,3].map(n=>{
     const selected=(hbState.selected[n]||[]).map(id=>hbOptionById(id)).filter(Boolean);
-    return `<div class="hb-review-item ${selected.length?'done':'missing'}"><strong>Frase ${n}</strong><span>${selected.length?hbEsc(selected.map(o=>o.titulo).join(", ")):"Ainda não selecionada"}</span><small>${selected.length}/${limit}</small></div>`;
+    return `<button type="button" class="hb-review-item ${selected.length?'done':'missing'}" onclick="hbOpenPhrase(${n})"><strong>Frase ${n}</strong><span>${selected.length?hbEsc(selected.map(o=>o.titulo).join(", ")):"Ainda não selecionada"}</span><small>${selected.length}/${limit}</small></button>`;
   }).join("");
   const btn=document.getElementById("hbConfirmBtn");
   if(btn) btn.disabled=missing.length>0 || (hbState.votacao && hbState.votacao.status!=="aberta");

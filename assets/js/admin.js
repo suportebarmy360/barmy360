@@ -32,21 +32,23 @@ async function uploadImageToField(fileInputId, targetInputId, msgId) {
   }
 
   try {
-    setMsg(msgId, "Enviando imagem...");
+    setMsg(msgId, "Otimizando e enviando imagem...");
+    const uploadFile = window.BARMY_IMAGE ? await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:1600,quality:0.78}) : file;
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 80);
     const path = `${targetInputId}/${Date.now()}-${Math.random().toString(16).slice(2)}-${safeName || "imagem." + ext}`;
 
     const { error: uploadError } = await sb().storage
       .from("barmy360-images")
-      .upload(path, file, { cacheControl: "3600", upsert: false });
+      .upload(path.replace(/\.[^.]+$/, ".webp"), uploadFile, { cacheControl: "31536000", contentType: uploadFile.type, upsert: false });
 
     if (uploadError) {
       setMsg(msgId, "Erro no upload: " + uploadError.message + " — rode o SQL de storage do ZIP.");
       return;
     }
 
-    const { data } = sb().storage.from("barmy360-images").getPublicUrl(path);
+    const finalPath = path.replace(/\.[^.]+$/, ".webp");
+    const { data } = sb().storage.from("barmy360-images").getPublicUrl(finalPath);
     target.value = data.publicUrl;
     setMsg(msgId, "Imagem enviada e URL preenchida.");
   } catch (err) {
@@ -72,18 +74,19 @@ async function uploadImagesToTextarea(fileInputId, targetTextareaId, msgId) {
   try {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      setMsg(msgId, `Enviando foto adicional ${i + 1}/${files.length}...`);
+      setMsg(msgId, `Otimizando foto adicional ${i + 1}/${files.length}...`);
+      const uploadFile = window.BARMY_IMAGE ? await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:1600,quality:0.78}) : file;
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 80);
       const path = `${targetTextareaId}/${Date.now()}-${i}-${Math.random().toString(16).slice(2)}-${safeName || "imagem." + ext}`;
       const { error: uploadError } = await sb().storage
         .from("barmy360-images")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path.replace(/\.[^.]+$/, ".webp"), uploadFile, { cacheControl: "31536000", contentType: uploadFile.type, upsert: false });
       if (uploadError) {
         setMsg(msgId, "Erro no upload: " + uploadError.message + " — rode o SQL de storage do ZIP.");
         return;
       }
-      const { data } = sb().storage.from("barmy360-images").getPublicUrl(path);
+      const { data } = sb().storage.from("barmy360-images").getPublicUrl(path.replace(/\.[^.]+$/, ".webp"));
       urls.push(data.publicUrl);
     }
     const existing = target.value.trim();
@@ -625,7 +628,8 @@ async function uploadHandbannerFiles() {
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const safeName = file.name
+    const uploadFile = window.BARMY_IMAGE ? await BARMY_IMAGE.compressImage(file, {maxWidth:1400,maxHeight:1400,quality:0.74}) : file;
+    const safeName = uploadFile.name
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-zA-Z0-9._-]/g, "-")
@@ -637,8 +641,9 @@ async function uploadHandbannerFiles() {
     const { error: uploadError } = await sb()
       .storage
       .from("handbanners")
-      .upload(path, file, {
-        cacheControl: "3600",
+      .upload(path.replace(/\.[^.]+$/, ".webp"), uploadFile, {
+        cacheControl: "31536000",
+        contentType: uploadFile.type,
         upsert: false
       });
 
@@ -651,7 +656,7 @@ async function uploadHandbannerFiles() {
     const { data: publicData } = sb()
       .storage
       .from("handbanners")
-      .getPublicUrl(path);
+      .getPublicUrl(path.replace(/\.[^.]+$/, ".webp"));
 
     rows.push({
       votacao_id,

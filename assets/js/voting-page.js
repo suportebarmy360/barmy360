@@ -31,7 +31,7 @@ function optionImage(opcao) {
   const img = opcao.imagem_url || opcao.imagem || "";
   if (!String(img).trim()) return "";
   if (String(img).startsWith("http")) {
-    return `<div class="project-image image-cover option-has-image" style="background-image:url('${escapeAttr(img)}')"></div>`;
+    const src=window.BARMY_IMAGE?BARMY_IMAGE.optimizedUrl(img,800,66):img; return `<div class="project-image image-cover option-has-image"><img src="${escapeAttr(src)}" alt="" loading="lazy" decoding="async" fetchpriority="low"></div>`;
   }
   return `<div class="project-image purple-bg option-has-image">${escapeHtml(img)}</div>`;
 }
