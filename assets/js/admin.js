@@ -33,7 +33,8 @@ async function uploadImageToField(fileInputId, targetInputId, msgId) {
 
   try {
     setMsg(msgId, "Otimizando e enviando imagem...");
-    const uploadFile = window.BARMY_IMAGE ? await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:1600,quality:0.78}) : file;
+    if(!window.BARMY_IMAGE) throw new Error("O otimizador de imagens não carregou. Publique também assets/js/image-optimizer.js e atualize com Ctrl+F5.");
+    const uploadFile = await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:1600,quality:0.78});
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 80);
     const path = `${targetInputId}/${Date.now()}-${Math.random().toString(16).slice(2)}-${safeName || "imagem." + ext}`;
@@ -50,7 +51,8 @@ async function uploadImageToField(fileInputId, targetInputId, msgId) {
     const finalPath = path.replace(/\.[^.]+$/, ".webp");
     const { data } = sb().storage.from("barmy360-images").getPublicUrl(finalPath);
     target.value = data.publicUrl;
-    setMsg(msgId, "Imagem enviada e URL preenchida.");
+    const info=uploadFile.__barmyOptimization;
+    setMsg(msgId, info ? `Imagem otimizada: ${BARMY_IMAGE.formatBytes(info.originalBytes)} → ${BARMY_IMAGE.formatBytes(info.finalBytes)} (WebP ${info.width}×${info.height}).` : "Imagem enviada.");
   } catch (err) {
     console.error(err);
     setMsg(msgId, "Erro no upload: " + (err.message || err));
@@ -75,7 +77,8 @@ async function uploadImagesToTextarea(fileInputId, targetTextareaId, msgId) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       setMsg(msgId, `Otimizando foto adicional ${i + 1}/${files.length}...`);
-      const uploadFile = window.BARMY_IMAGE ? await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:1600,quality:0.78}) : file;
+      if(!window.BARMY_IMAGE) throw new Error("O otimizador de imagens não carregou. Publique também assets/js/image-optimizer.js e atualize com Ctrl+F5.");
+      const uploadFile = await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:1600,quality:0.78});
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 80);
       const path = `${targetTextareaId}/${Date.now()}-${i}-${Math.random().toString(16).slice(2)}-${safeName || "imagem." + ext}`;
@@ -628,7 +631,8 @@ async function uploadHandbannerFiles() {
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const uploadFile = window.BARMY_IMAGE ? await BARMY_IMAGE.compressImage(file, {maxWidth:1400,maxHeight:1400,quality:0.74}) : file;
+    if(!window.BARMY_IMAGE) return setMsg("uploadMsg", "O otimizador de imagens não carregou. Publique todos os arquivos do ZIP e atualize com Ctrl+F5.");
+    const uploadFile = await BARMY_IMAGE.compressImage(file, {maxWidth:1400,maxHeight:1400,quality:0.74});
     const safeName = uploadFile.name
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -668,7 +672,8 @@ async function uploadHandbannerFiles() {
       votos: 0
     });
 
-    setMsg("uploadMsg", `Enviadas ${i + 1}/${files.length} imagem(ns)...`);
+    const optInfo=uploadFile.__barmyOptimization;
+    setMsg("uploadMsg", optInfo ? `Enviadas ${i + 1}/${files.length}: ${BARMY_IMAGE.formatBytes(optInfo.originalBytes)} → ${BARMY_IMAGE.formatBytes(optInfo.finalBytes)} WebP.` : `Enviadas ${i + 1}/${files.length} imagem(ns)...`);
   }
 
   const { error } = await sb().from("opcoes_votacao").insert(rows);
@@ -1735,14 +1740,26 @@ async function loadMetricsDashboard(){
       metricFetchAll('votos_opcao','id,votacao_id,opcao_id,voter_fingerprint,voter_ip,created_at'),
       metricFetchAll('site_accesses','id,page_path,visitor_fingerprint,created_at')
     ]);
+    let historicalSummaries=[], historicalOptions=[];
+    try{
+      [historicalSummaries,historicalOptions]=await Promise.all([
+        metricFetchAll('historical_vote_summaries','votacao_id,title,total_votes,total_people,status,active'),
+        metricFetchAll('historical_vote_options','votacao_id,opcao_id,label,vote_count')
+      ]);
+      historicalSummaries=historicalSummaries.filter(r=>r.active!==false);
+    }catch(historyError){ console.info('Histórico consolidado ainda não instalado.',historyError); }
     const participantKey=v=>String(v.voter_fingerprint||v.voter_ip||'').trim();
     const totalPeople=uniqueNonEmpty(votos.map(participantKey));
     const totalVisitors=uniqueNonEmpty(accesses.map(a=>a.visitor_fingerprint));
+    const historicalVotes=historicalSummaries.reduce((sum,r)=>sum+Number(r.total_votes||0),0);
+    const historicalPeople=historicalSummaries.reduce((sum,r)=>sum+Number(r.total_people||0),0);
     summary.innerHTML=[
       ['Acessos ao site',accesses.length],
       ['Visitantes únicos',totalVisitors],
-      ['Pessoas que votaram',totalPeople],
-      ['Votos registrados',votos.length]
+      ['Pessoas em votações ativas',totalPeople],
+      ['Votos no banco',votos.length],
+      ['Votos históricos arquivados',historicalVotes],
+      ['Participantes históricos',historicalPeople]
     ].map(([label,n])=>`<article class="metric-summary-card"><span>${escapeHtml(label)}</span><strong>${metricNumber(n)}</strong></article>`).join('');
 
     const projectByKey=new Map(projects.map(p=>[String(p.project_key||''),p]));
@@ -1764,6 +1781,15 @@ async function loadMetricsDashboard(){
         <div class="metric-options-list">${optionLines||'<p>Nenhuma opção cadastrada.</p>'}</div>
       </article>`;
     }).join(''):'<p>Nenhuma votação cadastrada.</p>';
+    if(historicalSummaries.length){
+      const optionTitleById=new Map(opcoes.map(o=>[String(o.id),o.titulo||'']));
+      const historyHtml=historicalSummaries.map(h=>{
+        const rows=historicalOptions.filter(o=>String(o.votacao_id)===String(h.votacao_id)).sort((a,b)=>Number(b.vote_count||0)-Number(a.vote_count||0));
+        const lines=rows.map((o,index)=>`<div class="metric-option-row"><span>${index+1}º — ${escapeHtml(o.label||optionTitleById.get(String(o.opcao_id))||('Arte '+String(o.opcao_id).slice(0,8)))}</span><strong>${metricNumber(o.vote_count)} voto(s)</strong></div>`).join('');
+        return `<article class="metric-project-card metric-history-card"><div class="metric-project-head"><div><h3>${escapeHtml(h.title||'Hand Banner — Fase 1')}</h3><small>${escapeHtml(h.status||'Encerrada')} · histórico consolidado</small></div><div class="metric-project-totals"><span><b>${metricNumber(h.total_people)}</b> pessoa(s)</span><span><b>${metricNumber(h.total_votes)}</b> voto(s)</span></div></div><details><summary>Ver votos por arte (${rows.length})</summary><div class="metric-options-list">${lines}</div></details></article>`;
+      }).join('');
+      projectsEl.insertAdjacentHTML('afterbegin',historyHtml);
+    }
 
     const pageMap=new Map();
     accesses.forEach(a=>{
