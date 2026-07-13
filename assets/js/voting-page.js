@@ -31,7 +31,10 @@ function optionImage(opcao) {
   const img = opcao.imagem_url || opcao.imagem || "";
   if (!String(img).trim()) return "";
   if (String(img).startsWith("http")) {
-    const src=window.BARMY_IMAGE?BARMY_IMAGE.optimizedUrl(img,800,66):img; return `<div class="project-image image-cover option-has-image"><img src="${escapeAttr(src)}" alt="" loading="lazy" decoding="async" fetchpriority="low"></div>`;
+    // Votações comuns (como o mosaico) mantêm exatamente o enquadramento antigo.
+    // A URL continua otimizada, mas a imagem volta a ser aplicada como background cover.
+    const src = window.BARMY_IMAGE ? BARMY_IMAGE.optimizedUrl(img, 800, 66) : img;
+    return `<div class="project-image image-cover option-has-image" style="background-image:url('${escapeAttr(src)}')"></div>`;
   }
   return `<div class="project-image purple-bg option-has-image">${escapeHtml(img)}</div>`;
 }

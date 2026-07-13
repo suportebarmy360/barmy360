@@ -1266,7 +1266,7 @@
 
  .voting-options-grid .option-card .project-image,
  .voting-options-grid .voting-option-card .project-image {
-   aspect-ratio: 3 / 1 !important;
+   aspect-ratio: 16 / 9 !important;
    min-height: auto !important;
  }
 
@@ -2771,9 +2771,10 @@ input, textarea, select, button { font: inherit; }
 @keyframes metricsFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media(max-width:620px){.metrics-inner-tabs{display:grid;grid-template-columns:1fr}.metrics-inner-tab{width:100%}}
 
-/* Otimização de mídia: evita baixar todas as artes originais de uma vez */
-.hb-art-image img,.project-image img,.post-image img,.project-detail-image img,.image-placeholder img,.help-gallery-image img{width:100%;height:100%;display:block;object-fit:cover;}
-.hb-art-image,.project-image,.post-image,.project-detail-image,.image-placeholder,.help-gallery-image{overflow:hidden;}
+/* Otimização de mídia restrita ao Hand Banner e galerias que usam <img>.
+   As votações comuns, inclusive o mosaico, preservam o enquadramento original. */
+.hb-art-image img,.post-image img,.project-detail-image img,.image-placeholder img,.help-gallery-image img{width:100%;height:100%;display:block;object-fit:cover;}
+.hb-art-image,.post-image,.project-detail-image,.image-placeholder,.help-gallery-image{overflow:hidden;}
 
 /* Hand Banner: carregamento por frase e paginação para reduzir Cached Egress */
 .hb-phrase-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px;position:sticky;top:8px;z-index:12;padding:10px;border-radius:20px;background:rgba(15,12,22,.92);backdrop-filter:blur(14px);border:1px solid rgba(190,110,255,.2)}
@@ -2807,3 +2808,20 @@ button.hb-review-item{width:100%;color:inherit;text-align:left;font:inherit;curs
   object-position: center center !important;
 }
 .hb-vote-counter[hidden] { display:none !important; }
+
+/* CORREÇÃO MOSAICO 16:9 — aplicada somente às votações comuns. */
+.voting-options-grid .option-card .project-image,
+.voting-options-grid .voting-option-card .project-image,
+[data-voting-grid] .option-card .project-image,
+[data-voting-grid] .voting-option-card .project-image,
+#votingOptionsGrid .option-card .project-image,
+#votingOptionsGrid .voting-option-card .project-image {
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  overflow: hidden !important;
+}
