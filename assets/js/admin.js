@@ -34,7 +34,12 @@ async function uploadImageToField(fileInputId, targetInputId, msgId) {
   try {
     setMsg(msgId, "Otimizando e enviando imagem...");
     if(!window.BARMY_IMAGE) throw new Error("O otimizador de imagens não carregou. Publique também assets/js/image-optimizer.js e atualize com Ctrl+F5.");
-    const uploadFile = await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:1600,quality:0.78});
+    // Hand Banner e suas capas usam uma caixa 16:9, sempre em modo contain.
+    // A imagem nunca é cortada ou esticada; imagens já 16:9 permanecem 16:9.
+    const isHandBannerImage = /^(hbAdm|handbanner)/i.test(targetInputId);
+    const uploadFile = await BARMY_IMAGE.compressImage(file, isHandBannerImage
+      ? {maxWidth:1600,maxHeight:900,quality:0.78,preserveAspectRatio:true}
+      : {maxWidth:1600,maxHeight:1600,quality:0.78,preserveAspectRatio:true});
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 80);
     const path = `${targetInputId}/${Date.now()}-${Math.random().toString(16).slice(2)}-${safeName || "imagem." + ext}`;
@@ -52,7 +57,7 @@ async function uploadImageToField(fileInputId, targetInputId, msgId) {
     const { data } = sb().storage.from("barmy360-images").getPublicUrl(finalPath);
     target.value = data.publicUrl;
     const info=uploadFile.__barmyOptimization;
-    setMsg(msgId, info ? `Imagem otimizada: ${BARMY_IMAGE.formatBytes(info.originalBytes)} → ${BARMY_IMAGE.formatBytes(info.finalBytes)} (WebP ${info.width}×${info.height}).` : "Imagem enviada.");
+    setMsg(msgId, info ? `Imagem otimizada: ${BARMY_IMAGE.formatBytes(info.originalBytes)} → ${BARMY_IMAGE.formatBytes(info.finalBytes)} (WebP ${info.width}×${info.height}, proporção preservada).` : "Imagem enviada.");
   } catch (err) {
     console.error(err);
     setMsg(msgId, "Erro no upload: " + (err.message || err));
@@ -78,7 +83,7 @@ async function uploadImagesToTextarea(fileInputId, targetTextareaId, msgId) {
       const file = files[i];
       setMsg(msgId, `Otimizando foto adicional ${i + 1}/${files.length}...`);
       if(!window.BARMY_IMAGE) throw new Error("O otimizador de imagens não carregou. Publique também assets/js/image-optimizer.js e atualize com Ctrl+F5.");
-      const uploadFile = await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:1600,quality:0.78});
+      const uploadFile = await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:1600,quality:0.78,preserveAspectRatio:true});
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 80);
       const path = `${targetTextareaId}/${Date.now()}-${i}-${Math.random().toString(16).slice(2)}-${safeName || "imagem." + ext}`;
@@ -632,7 +637,7 @@ async function uploadHandbannerFiles() {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     if(!window.BARMY_IMAGE) return setMsg("uploadMsg", "O otimizador de imagens não carregou. Publique todos os arquivos do ZIP e atualize com Ctrl+F5.");
-    const uploadFile = await BARMY_IMAGE.compressImage(file, {maxWidth:1400,maxHeight:1400,quality:0.74});
+    const uploadFile = await BARMY_IMAGE.compressImage(file, {maxWidth:1600,maxHeight:900,quality:0.76,preserveAspectRatio:true});
     const safeName = uploadFile.name
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -673,7 +678,7 @@ async function uploadHandbannerFiles() {
     });
 
     const optInfo=uploadFile.__barmyOptimization;
-    setMsg("uploadMsg", optInfo ? `Enviadas ${i + 1}/${files.length}: ${BARMY_IMAGE.formatBytes(optInfo.originalBytes)} → ${BARMY_IMAGE.formatBytes(optInfo.finalBytes)} WebP.` : `Enviadas ${i + 1}/${files.length} imagem(ns)...`);
+    setMsg("uploadMsg", optInfo ? `Enviadas ${i + 1}/${files.length}: ${BARMY_IMAGE.formatBytes(optInfo.originalBytes)} → ${BARMY_IMAGE.formatBytes(optInfo.finalBytes)} WebP, proporção preservada.` : `Enviadas ${i + 1}/${files.length} imagem(ns)...`);
   }
 
   const { error } = await sb().from("opcoes_votacao").insert(rows);

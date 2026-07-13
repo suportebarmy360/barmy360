@@ -43,9 +43,12 @@
     const quality=Math.max(.45,Math.min(.92,Number(opts.quality||.78)));
     const decoded=await decodeImage(file);
     try{
+      // Redimensionamento no modo "contain": nunca corta, estica ou altera a proporção.
+      // Também nunca aumenta uma imagem menor que os limites informados.
+      const originalRatio=decoded.width/decoded.height;
       const scale=Math.min(1,maxWidth/decoded.width,maxHeight/decoded.height);
       const width=Math.max(1,Math.round(decoded.width*scale));
-      const height=Math.max(1,Math.round(decoded.height*scale));
+      const height=Math.max(1,Math.round(width/originalRatio));
       const canvas=document.createElement('canvas');
       canvas.width=width; canvas.height=height;
       const ctx=canvas.getContext('2d',{alpha:false,desynchronized:true});
@@ -59,7 +62,16 @@
       if(blob.type!=='image/webp') throw new Error('Este navegador não gerou WebP corretamente.');
       const name=String(file.name||'imagem').replace(/\.[^.]+$/, '')+'.webp';
       const result=new File([blob],name,{type:'image/webp',lastModified:Date.now()});
-      result.__barmyOptimization={originalBytes:file.size,finalBytes:result.size,width,height};
+      result.__barmyOptimization={
+        originalBytes:file.size,
+        finalBytes:result.size,
+        originalWidth:decoded.width,
+        originalHeight:decoded.height,
+        width,
+        height,
+        aspectRatio:decoded.width/decoded.height,
+        aspectPreserved:true
+      };
       return result;
     }finally{ decoded.close?.(); }
   }
