@@ -9,11 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css?v=20260711-metrics-tabs">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<script defer src="assets/js/image-optimizer.js?v=20260712-opt2"></script>
+<script defer src="assets/js/image-optimizer.js?v=20260713-ratio3"></script>
 <script defer src="assets/js/config.js"></script>
 <script defer src="assets/js/main.js"></script>
-<script defer src="assets/js/admin.js?v=20260712-opt2"></script>
-<script defer src="assets/js/admin-handbanner.js"></script>
+<script defer src="assets/js/admin.js?v=20260713-ratio3?v=20260712-opt2"></script>
+<script defer src="assets/js/admin-handbanner.js?v=20260713-votecount"></script>
 </head>
 <body class="admin-body">
 <header class="topbar admin-topbar">
@@ -177,6 +177,8 @@
             </select>
             <label>Status da votação</label>
             <select id="hbAdmStatus"><option value="rascunho">Rascunho</option><option value="aberta">Votação aberta</option><option value="fechada">Votação fechada</option></select>
+            <label class="check-row"><input id="hbAdmShowVoteCounts" type="checkbox"> Mostrar quantidade de votos para o público</label>
+            <p class="admin-help">Desmarcado: os números ficam visíveis apenas no painel administrativo. Pode ser alterado a qualquer momento sem apagar votos.</p>
             <label>Restrição de votos</label>
             <select id="hbAdmRestrictionMode">
               <option value="fingerprint">Bloquear nova votação por navegador/dispositivo</option>

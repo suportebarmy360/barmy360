@@ -17,7 +17,7 @@ async function hbGetVotacao(){
 async function hbEnsureVotacao(){
   let v=await hbGetVotacao();
   if(v) return v;
-  const item={project_key:hbAdminConfig().key,titulo:val("hbAdmPageTitle")||"Votação Hand Banner",descricao:val("hbAdmPageDescription")||"Escolha uma arte para cada frase.",status:val("hbAdmStatus")||"aberta",fase:`handbanner-fase-${HB_ADMIN_PHASE}`,mostrar_ranking:false};
+  const item={project_key:hbAdminConfig().key,titulo:val("hbAdmPageTitle")||"Votação Hand Banner",descricao:val("hbAdmPageDescription")||"Escolha uma arte para cada frase.",status:val("hbAdmStatus")||"aberta",fase:`handbanner-fase-${HB_ADMIN_PHASE}`,mostrar_ranking:!!$id("hbAdmShowVoteCounts")?.checked};
   const {data,error}=await sb().from("votacoes").insert(item).select().single();
   if(error) throw error;
   return data;
@@ -45,6 +45,8 @@ async function hbLoadAdmin(){
     setVal("hbAdmPhrase2",hbAdminSetting(s,"phrase_2")||"Frase 2");
     setVal("hbAdmPhrase3",hbAdminSetting(s,"phrase_3")||"Frase 3");
     setVal("hbAdmStatus",(v&&v.status)||"rascunho");
+    const showCounts=$id("hbAdmShowVoteCounts");
+    if(showCounts) showCounts.checked=!!(v&&v.mostrar_ranking);
     setVal("hbAdmRestrictionMode", hbAdminSetting(s,"restriction_mode") || "fingerprint");
     setVal("hbAdmVotesPerPhraseLimit", String(hbAdminConfig().limit || hbAdminSetting(s,"limit_per_phrase",1)));
     setVal("hbAdmPublished", String(hbAdminSetting(s,"published") ?? false));
@@ -85,7 +87,7 @@ window.hbAdminSavePage=async function(){
     const pq=(existing&&existing.length)?sb().from("projects").update(project).eq("id",existing[0].id):sb().from("projects").insert(project);
     const {error:projectError}=await pq; if(projectError) throw projectError;
     let v=await hbGetVotacao();
-    const vot={project_key:hbAdminConfig().key,titulo:title,descricao:desc,status:status,fase:`handbanner-fase-${HB_ADMIN_PHASE}`,mostrar_ranking:false};
+    const vot={project_key:hbAdminConfig().key,titulo:title,descricao:desc,status:status,fase:`handbanner-fase-${HB_ADMIN_PHASE}`,mostrar_ranking:!!$id("hbAdmShowVoteCounts")?.checked};
     const vq=v?sb().from("votacoes").update(vot).eq("id",v.id):sb().from("votacoes").insert(vot);
     const {error:vError}=await vq; if(vError) throw vError;
     msg("hbAdmMsg","Página, card e votação salvos."); await hbLoadAdmin();

@@ -2783,3 +2783,27 @@ input, textarea, select, button { font: inherit; }
 .hb-pagination{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:18px 0}.hb-pagination span{font-size:.92rem;opacity:.86}.hb-pagination button:disabled{opacity:.35;cursor:not-allowed;transform:none}
 button.hb-review-item{width:100%;color:inherit;text-align:left;font:inherit;cursor:pointer}.hb-review-item:hover{border-color:rgba(203,115,255,.7);background:rgba(126,58,242,.12)}
 @media(max-width:700px){.hb-phrase-tabs{grid-template-columns:1fr;position:static}.hb-phrase-tab{align-items:center;text-align:center}.hb-pagination{justify-content:space-between}.hb-pagination span{order:-1;width:100%;text-align:center}}
+
+
+/* Correção definitiva de proporção das imagens do Hand Banner.
+   O card continua 16:9, mas a arte inteira aparece sem recorte ou deformação. */
+.hb-art-image,
+.hb-public-art-img,
+.hb-hero-cover {
+  aspect-ratio: 16 / 9 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  background: rgba(8,8,12,.96);
+}
+.hb-art-image > img,
+.hb-public-art-img > img,
+.hb-hero-cover > img,
+.hb-vote-hero-image img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+.hb-vote-counter[hidden] { display:none !important; }

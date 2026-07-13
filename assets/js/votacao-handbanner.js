@@ -26,6 +26,7 @@ function hbPhraseLabel(n){return hbSetting(`phrase_${n}`,`Frase ${n}`);}
 function hbOptionById(id){return hbState.opcoes.find(x=>String(x.id)===String(id));}
 function hbLimit(){ if(HB_PHASE===2) return 3; if(HB_PHASE===3) return 1; const n=Number(hbSetting("limit_per_phrase",1)); return Math.max(1,Math.min(20,Number.isFinite(n)?n:1)); }
 function hbExact(){return HB_PHASE===2||HB_PHASE===3;}
+function hbShowVoteCounts(){return !!(hbState.votacao&&hbState.votacao.mostrar_ranking);}
 async function hbLoad(){
   if(!hbSb()){hbMsg("Supabase não conectado. Confira assets/js/config.js.","error");return;}
   const {data:settings}=await hbSb().from("site_settings").select("*").eq("id",1).maybeSingle();
@@ -119,7 +120,7 @@ function hbRenderOptionCard(n,o){
       <span class="status voting">OPÇÃO</span>
       <h3>${hbEsc(o.titulo||`Opção ${n}`)}</h3>
       ${o.descricao?`<p>${hbEsc(o.descricao)}</p>`:""}
-      <div class="vote-line hb-vote-counter"><span>Votos</span><strong id="hb-votes-${hbAttr(o.id)}">${Number(o.votos_count||o.votos||0).toLocaleString("pt-BR")}</strong></div>
+      ${hbShowVoteCounts()?`<div class="vote-line hb-vote-counter"><span>Votos</span><strong id="hb-votes-${hbAttr(o.id)}">${Number(o.votos_count||o.votos||0).toLocaleString("pt-BR")}</strong></div>`:""}
       <button class="btn small ${isSelected?'primary':'outline'}" type="button">${isSelected?"Selecionado":"Selecionar"}</button>
     </div>
   </article>`;
