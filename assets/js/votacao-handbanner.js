@@ -12,7 +12,13 @@ function hbImageUrl(url){ return String(url||"").trim(); }
 function hbImage(url, cls=""){
   const img=hbImageUrl(url);
   if(!img) return `<div class="hb-art-image ${cls} purple-bg">BARMY360</div>`;
-  if(img.startsWith("http") || img.startsWith("assets/")){ const src=window.BARMY_IMAGE?BARMY_IMAGE.optimizedUrl(img,900,66):img; return `<div class="hb-art-image ${cls}"><img src="${hbAttr(src)}" alt="" loading="lazy" decoding="async" fetchpriority="low"></div>`; }
+  if(img.startsWith("http") || img.startsWith("assets/")){
+    // A capa interna das fases usa o arquivo original para não sofrer recorte da transformação CDN.
+    // As artes da votação continuam usando miniaturas otimizadas.
+    const isHeroCover=String(cls||"").split(/\s+/).includes("hb-hero-cover");
+    const src=(!isHeroCover && window.BARMY_IMAGE)?BARMY_IMAGE.optimizedUrl(img,900,66):img;
+    return `<div class="hb-art-image ${cls}"><img src="${hbAttr(src)}" alt="" loading="${isHeroCover?'eager':'lazy'}" decoding="async" fetchpriority="${isHeroCover?'high':'low'}"></div>`;
+  }
   return `<div class="hb-art-image ${cls} purple-bg">${hbEsc(img)}</div>`;
 }
 function hbSplitCards(text){

@@ -2825,3 +2825,44 @@ button.hb-review-item{width:100%;color:inherit;text-align:left;font:inherit;curs
   background-repeat: no-repeat !important;
   overflow: hidden !important;
 }
+
+
+/* Ajuste exclusivo da capa interna das fases do Hand Banner.
+   Exibe a imagem completa, mantém a proporção original e evita recorte. */
+.hb-vote-hero-image {
+  min-width: 0;
+}
+.hb-vote-hero-image .hb-hero-cover {
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  background: #07070b !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+}
+.hb-vote-hero-image .hb-hero-cover > img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+/* Título mais equilibrado e descrição destacada abaixo dele. */
+.hb-vote-hero-text h1 {
+  font-size: clamp(2rem, 4vw, 3.65rem) !important;
+  line-height: 1.02 !important;
+  margin: .35rem 0 .9rem !important;
+  overflow-wrap: anywhere;
+}
+.hb-vote-hero-text .hb-hero-description {
+  max-width: 640px;
+  margin: 0 0 1.15rem !important;
+  padding: 15px 17px;
+  border: 1px solid rgba(205, 129, 255, .28);
+  border-radius: 16px;
+  background: rgba(255,255,255,.045);
+  font-size: 1rem !important;
+  line-height: 1.5;
+}
+@media (max-width: 780px) {
+  .hb-vote-hero-text h1 { font-size: clamp(2rem, 10vw, 3rem) !important; }
+}
