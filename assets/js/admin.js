@@ -134,18 +134,33 @@ async function adminLogin() {
     return;
   }
 
-  const { error } = await sb().auth.signInWithPassword({ email, password });
-
-  if (error) {
+  const button = document.querySelector('#loginArea button');
+  try {
+    if (button) button.disabled = true;
+    msg.textContent = "Entrando...";
+    const { data, error } = await sb().auth.signInWithPassword({ email: email.trim(), password });
+    if (error) throw error;
+    if (!data?.session) throw new Error("O Supabase não retornou uma sessão válida.");
+    msg.textContent = "";
+    document.getElementById("loginArea")?.classList.add("hidden");
+    document.getElementById("dashboardArea")?.classList.remove("hidden");
+    await loadAdminData();
+  } catch (error) {
     console.error("Erro Supabase Auth:", error);
-    msg.textContent = "Erro no login: " + error.message;
-    return;
+    const raw = String(error?.message || error || "Erro inesperado");
+    msg.textContent = raw.toLowerCase().includes("invalid login credentials")
+      ? "E-mail ou senha incorretos. Use o mesmo usuário cadastrado no Supabase Authentication."
+      : "Erro no login: " + raw;
+  } finally {
+    if (button) button.disabled = false;
   }
-
-  document.getElementById("loginArea").classList.add("hidden");
-  document.getElementById("dashboardArea").classList.remove("hidden");
-  loadAdminData();
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("adminPassword")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") adminLogin();
+  });
+});
 
 async function adminLogout() {
   if (sb()) await sb().auth.signOut();

@@ -7,13 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20260713-mosaico-16x9-final">
+<link rel="stylesheet" href="assets/css/style.css?v=20260714-love-layout2">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script defer src="assets/js/image-optimizer.js?v=20260713-ratio3"></script>
 <script defer src="assets/js/config.js"></script>
 <script defer src="assets/js/main.js"></script>
-<script defer src="assets/js/admin.js?v=20260713-ratio3?v=20260712-opt2"></script>
+<script defer src="assets/js/admin.js?v=20260714-loginfix1"></script>
 <script defer src="assets/js/admin-handbanner.js?v=20260713-votecount"></script>
+<script defer src="assets/js/admin-love-project.js?v=20260714-love1"></script>
 </head>
 <body class="admin-body">
 <header class="topbar admin-topbar">
@@ -51,6 +52,7 @@
       <button class="tab" onclick="showAdminTab('ajuda', this)">BARMY Ajuda</button>
       <button class="tab" onclick="showAdminTab('stream', this)">Stream</button>
       <button class="tab" onclick="showAdminTab('docs', this)">Docs/Cronogramas</button>
+      <button class="tab" onclick="showAdminTab('loveStories', this); loadLoveStoriesAdmin()">Relatos Love Project</button>
       <button class="tab" onclick="showAdminTab('site', this)">Configurações</button>
       <span class="admin-tabs-separator" aria-hidden="true"></span>
       <button class="tab tab-metrics-main" onclick="showAdminTab('metrics', this); loadMetricsDashboard()">📊 Estatísticas</button>
@@ -554,6 +556,44 @@ O voto só será enviado depois da confirmação."></textarea>
           <div id="metricsPages" class="metrics-table-wrap"></div>
         </section>
       </div>
+    </div>
+
+
+    <div id="tab-loveStories" class="admin-tab-panel hidden">
+      <section class="admin-card">
+        <h2>Relatos — What Is Your Love Project</h2>
+        <p class="admin-help">Os envios do público chegam como pendentes. As ADMs podem revisar, editar, aprovar, retirar da publicação ou excluir. Também é possível criar relatos diretamente pelo painel.</p>
+      </section>
+
+      <section id="loveAdmForm" class="admin-card">
+        <h2>Criar ou editar relato</h2>
+        <input id="loveAdmId" type="hidden">
+        <input id="loveAdmProjectId" type="hidden">
+        <div class="love-admin-form-grid">
+          <input id="loveAdmName" placeholder="Nome">
+          <input id="loveAdmHandle" placeholder="@ do usuário">
+          <select id="loveAdmSocial"><option value="">Rede social (opcional)</option><option>Instagram</option><option>X / Twitter</option><option>TikTok</option><option>Facebook</option><option>Threads</option><option>Outra</option></select>
+          <input id="loveAdmArmySince" placeholder="Desde quando é ARMY">
+          <input id="loveAdmCity" placeholder="Cidade">
+          <input id="loveAdmState" placeholder="Estado">
+        </div>
+        <textarea id="loveAdmStory" class="love-admin-story-field" placeholder="Relato"></textarea>
+        <select id="loveAdmStatus"><option value="approved">Aprovado / publicado</option><option value="pending">Pendente</option><option value="rejected">Rejeitado</option></select>
+        <div class="admin-actions">
+          <button class="btn primary" onclick="saveLoveStoryAdmin()">Salvar relato</button>
+          <button class="btn outline" onclick="clearLoveStoryForm()">Limpar</button>
+        </div>
+        <p id="loveAdmMsg" class="form-msg"></p>
+      </section>
+
+      <section class="admin-card">
+        <h2>Relatos pendentes</h2>
+        <div id="loveStoriesPendingList" class="admin-list"></div>
+      </section>
+      <section class="admin-card">
+        <h2>Relatos publicados</h2>
+        <div id="loveStoriesPublishedList" class="admin-list"></div>
+      </section>
     </div>
 
     <div id="tab-site" class="admin-tab-panel hidden">

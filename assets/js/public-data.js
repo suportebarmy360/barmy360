@@ -501,6 +501,43 @@ async function loadProjectDetail() {
     return;
   }
 
+  const isLoveProject = !!window.BARMY_LOVE_PROJECT?.matches(p);
+
+  if (isLoveProject) {
+    root.innerHTML = `<section class="project-detail-hero love-project-detail-hero">
+      <div class="project-detail-card glow-card">
+        ${projectImageMarkup(p, "project-detail-image purple-bg")}
+        <div class="project-detail-info">
+          <p class="kicker">WHAT IS YOUR LOVE PROJECT</p>
+          <span class="status ${statusClass(projectDisplayStatus(p))}">${statusText(projectDisplayStatus(p))}</span>
+          <h1>${escapeHtml(p.title)}</h1>
+          <p>${escapeHtml(p.description || "")}</p>
+          <div class="hero-actions">
+            <button type="button" class="btn primary" onclick="BARMY_LOVE_PROJECT.openSubmit()">Enviar meu relato</button>
+            <a class="btn outline back-link" href="projetos.html">← Voltar para projetos</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section love-project-info-grid">
+      <article class="detail-box glow-card love-info-card">
+        <p class="kicker">SOBRE</p>
+        <h2>💜 O que é o projeto</h2>
+        <p>${escapeHtml(p.description || "Um espaço para reunir e compartilhar histórias reais de ARMYs de todo o Brasil.")}</p>
+      </article>
+      <article class="detail-box glow-card love-info-card">
+        <p class="kicker">COMO FUNCIONA</p>
+        <h2>✨ Dinâmica do projeto</h2>
+        <p>${escapeHtml(p.details || "Envie seu relato pelo formulário. As ADMs irão revisar, editar quando necessário e publicar os relatos aprovados nesta página.")}</p>
+      </article>
+    </section>
+
+    ${window.BARMY_LOVE_PROJECT.markup(p)}`;
+    setTimeout(() => window.BARMY_LOVE_PROJECT.init(), 0);
+    return;
+  }
+
   root.innerHTML = `<section class="project-detail-hero">
     <div class="project-detail-card glow-card">
       ${projectImageMarkup(p, "project-detail-image purple-bg")}
@@ -513,46 +550,24 @@ async function loadProjectDetail() {
           <span class="meta-pill">💜 BARMY360</span>
           <span class="meta-pill">${escapeHtml(statusText(projectDisplayStatus(p)))}</span>
         </div>
-        <a class="btn outline back-link" href="projetos.html">← Voltar para projetos</a>
+        <div class="hero-actions"><a class="btn outline back-link" href="projetos.html">← Voltar para projetos</a></div>
       </div>
     </div>
   </section>
 
   <section class="project-detail-grid section">
-    <article class="detail-box glow-card docs-card">
-      <h2>📄 Documentos para votação</h2>
-      <p>Leia os termos, editais e documentos antes de votar ou participar.</p>
-      <a class="btn small primary" href="documento-votacao.html">Abrir documentos</a>
-    </article>
-    <article class="detail-box glow-card">
-      <h2>📌 Sobre o projeto</h2>
-      <p>${escapeHtml(p.description || "Texto do projeto.")}</p>
-    </article>
-    <article class="detail-box glow-card">
-      <h2>✨ Dinâmica</h2>
-      <p>${escapeHtml(
-        p.details || "Os ADMs irão publicar a dinâmica completa, instruções e momento da ação."
-      )}</p>
-    </article>
-    <article class="detail-box glow-card">
-      <h2>⚠️ Avisos importantes</h2>
-      <ul>
-        <li>Não compartilhar informações internas fora da área protegida.</li>
-        <li>Seguir apenas a versão publicada pelos ADMs.</li>
-        <li>Respeitar as regras oficiais do evento e do estádio.</li>
-      </ul>
-    </article>
+    <article class="detail-box glow-card docs-card"><h2>📄 Documentos para votação</h2><p>Leia os termos, editais e documentos antes de votar ou participar.</p><a class="btn small primary" href="documento-votacao.html">Abrir documentos</a></article>
+    <article class="detail-box glow-card"><h2>📌 Sobre o projeto</h2><p>${escapeHtml(p.description || "Texto do projeto.")}</p></article>
+    <article class="detail-box glow-card"><h2>✨ Dinâmica</h2><p>${escapeHtml(p.details || "Os ADMs irão publicar a dinâmica completa, instruções e momento da ação.")}</p></article>
+    <article class="detail-box glow-card"><h2>⚠️ Avisos importantes</h2><ul><li>Não compartilhar informações internas fora da área protegida.</li><li>Seguir apenas a versão publicada pelos ADMs.</li><li>Respeitar as regras oficiais do evento e do estádio.</li></ul></article>
   </section>
 
   <section class="section voting-campaign glow-card">
-    <div class="section-heading compact-heading">
-      <p class="kicker">VOTAÇÃO DO PROJETO</p>
-      <h2>Opções para votação</h2>
-      <p id="votingStatusText">Carregando votação vinculada a este projeto...</p>
-    </div>
+    <div class="section-heading compact-heading"><p class="kicker">VOTAÇÃO DO PROJETO</p><h2>Opções para votação</h2><p id="votingStatusText">Carregando votação vinculada a este projeto...</p></div>
     <div id="votingOptionsGrid" class="project-grid voting-options-grid" data-voting-grid data-votacao-project="${escapeAttr(projectVotingKey(p))}"></div>
   </section>`;
   if (typeof loadVotingOptions === "function") setTimeout(loadVotingOptions, 0);
+
 }
 
 
