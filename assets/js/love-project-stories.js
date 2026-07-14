@@ -6,6 +6,22 @@
     return String(value ?? "").replace(/[&<>'"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
   }
 
+  function value(id) {
+    return document.getElementById(id)?.value?.trim?.() || "";
+  }
+
+  function clearFormFields() {
+    ["loveStoryName", "loveStoryHandle", "loveStoryArmySince", "loveStoryCity", "loveStoryState", "loveStoryText"]
+      .forEach((id) => {
+        const element = document.getElementById(id);
+        if (element) element.value = "";
+      });
+    const social = document.getElementById("loveStorySocial");
+    if (social) social.value = "";
+    const consent = document.getElementById("loveStoryConsent");
+    if (consent) consent.checked = false;
+  }
+
   window.BARMY_LOVE_PROJECT = {
     matches(project) {
       return !!project && PROJECT_RE.test(String(project.title || ""));
@@ -58,7 +74,7 @@
       if (!panel) return;
       panel.classList.toggle("hidden", !open);
       panel.setAttribute("aria-hidden", open ? "false" : "true");
-      if (open) panel.scrollIntoView({behavior:"smooth", block:"start"});
+      if (open) panel.scrollIntoView({ behavior: "smooth", block: "start" });
     },
 
     openSubmit() {
@@ -69,7 +85,10 @@
       const section = document.getElementById("loveProjectCommunity");
       const form = document.getElementById("loveStoryForm");
       if (!section || !form) return;
-      form.addEventListener("submit", (event) => this.submit(event));
+      if (!form.dataset.listenerReady) {
+        form.addEventListener("submit", (event) => this.submit(event));
+        form.dataset.listenerReady = "1";
+      }
       await this.loadPublished();
     },
 
@@ -77,39 +96,66 @@
       event.preventDefault();
       const msg = document.getElementById("loveStoryMessage");
       const section = document.getElementById("loveProjectCommunity");
-      const button = event.currentTarget.querySelector('button[type="submit"]');
+      const button = document.querySelector('#loveStoryForm button[type="submit"]');
+      const consent = document.getElementById("loveStoryConsent")?.checked;
       const payload = {
-        project_id: section?.dataset.projectId || null,
-        name: document.getElementById("loveStoryName")?.value.trim(),
-        social_handle: document.getElementById("loveStoryHandle")?.value.trim(),
-        social_network: document.getElementById("loveStorySocial")?.value || null,
-        army_since: document.getElementById("loveStoryArmySince")?.value.trim(),
-        city: document.getElementById("loveStoryCity")?.value.trim(),
-        state: document.getElementById("loveStoryState")?.value.trim(),
-        story: document.getElementById("loveStoryText")?.value.trim(),
-        status: "pending",
-        source: "public"
+        p_project_id: section?.dataset.projectId || null,
+        p_name: value("loveStoryName"),
+        p_social_handle: value("loveStoryHandle"),
+        p_social_network: value("loveStorySocial") || null,
+        p_army_since: value("loveStoryArmySince"),
+        p_city: value("loveStoryCity"),
+        p_state: value("loveStoryState"),
+        p_story: value("loveStoryText")
       };
-      if (!payload.name || !payload.social_handle || !payload.army_since || !payload.city || !payload.state || !payload.story) {
-        msg.textContent = "Preencha todos os campos obrigatórios."; return;
+
+      if (!payload.p_name || !payload.p_social_handle || !payload.p_army_since || !payload.p_city || !payload.p_state || !payload.p_story) {
+        if (msg) msg.textContent = "Preencha todos os campos obrigatórios.";
+        return;
       }
-      if (payload.story.length < 20) { msg.textContent = "Escreva um relato um pouco mais completo."; return; }
-      button.disabled = true; msg.textContent = "Enviando seu relato...";
+      if (!consent) {
+        if (msg) msg.textContent = "Autorize a publicação para enviar o relato.";
+        return;
+      }
+      if (payload.p_story.length < 20) {
+        if (msg) msg.textContent = "Escreva um relato um pouco mais completo.";
+        return;
+      }
+
+      if (button) button.disabled = true;
+      if (msg) msg.textContent = "Enviando seu relato...";
+
       try {
         if (window.BARMY360_SUPABASE) {
-          const { error } = await BARMY360_SUPABASE.from("love_project_stories").insert(payload);
+          const { error } = await BARMY360_SUPABASE.rpc("submit_love_project_story", payload);
           if (error) throw error;
         } else {
           const rows = JSON.parse(localStorage.getItem(fallbackKey) || "[]");
-          rows.unshift({...payload, id: crypto.randomUUID?.() || String(Date.now()), created_at:new Date().toISOString()});
+          rows.unshift({
+            project_id: payload.p_project_id,
+            name: payload.p_name,
+            social_handle: payload.p_social_handle,
+            social_network: payload.p_social_network,
+            army_since: payload.p_army_since,
+            city: payload.p_city,
+            state: payload.p_state,
+            story: payload.p_story,
+            status: "pending",
+            source: "public",
+            id: crypto.randomUUID?.() || String(Date.now()),
+            created_at: new Date().toISOString()
+          });
           localStorage.setItem(fallbackKey, JSON.stringify(rows));
         }
-        event.currentTarget.reset();
-        msg.textContent = "Relato enviado! Ele aparecerá aqui depois da análise e aprovação das ADMs. 💜";
+
+        clearFormFields();
+        if (msg) msg.textContent = "Relato enviado! Ele será publicado depois da análise das ADMs. 💜";
       } catch (error) {
-        console.error(error);
-        msg.textContent = "Não foi possível enviar: " + (error.message || "erro inesperado");
-      } finally { button.disabled = false; }
+        console.error("Erro ao enviar relato:", error);
+        if (msg) msg.textContent = "Não foi possível enviar: " + (error?.message || "erro inesperado");
+      } finally {
+        if (button) button.disabled = false;
+      }
     },
 
     async loadPublished() {
@@ -118,24 +164,26 @@
       try {
         let rows = [];
         if (window.BARMY360_SUPABASE) {
-          const projectId = document.getElementById("loveProjectCommunity")?.dataset.projectId;
-          let query = BARMY360_SUPABASE.from("love_project_stories").select("*").eq("status", "approved").order("published_at", {ascending:false, nullsFirst:false}).order("created_at", {ascending:false});
-          if (projectId) query = query.eq("project_id", projectId);
-          const { data, error } = await query;
+          const projectId = document.getElementById("loveProjectCommunity")?.dataset.projectId || null;
+          const { data, error } = await BARMY360_SUPABASE.rpc("get_published_love_project_stories", {
+            p_project_id: projectId
+          });
           if (error) throw error;
           rows = data || [];
         } else {
           rows = JSON.parse(localStorage.getItem(fallbackKey) || "[]").filter((r) => r.status === "approved");
         }
+
         list.innerHTML = rows.length ? rows.map((r) => `
           <article class="love-story-card glow-card">
             <div class="love-story-card-head"><div><h3>${esc(r.name)}</h3><p>${esc(r.social_handle || "")}${r.social_network ? ` · ${esc(r.social_network)}` : ""}</p></div><span class="love-location">${esc(r.city)}, ${esc(r.state)}</span></div>
             <p class="love-army-since">ARMY ${esc(r.army_since || "")}</p>
-            <div class="love-story-body">${esc(r.story).replace(/\n/g,"<br>")}</div>
+            <div class="love-story-body">${esc(r.story).replace(/\n/g, "<br>")}</div>
           </article>`).join("") : `<article class="love-empty glow-card"><h3>Os relatos aparecerão aqui</h3><p>Assim que as ADMs aprovarem os primeiros envios, eles serão publicados nesta área.</p></article>`;
       } catch (error) {
-        console.error(error);
-        list.innerHTML = `<p class="form-msg">Não foi possível carregar os relatos. Confirme se o SQL desta versão foi executado.</p>`;
+        console.error("Erro ao carregar relatos aprovados:", error);
+        const detail = error?.message ? ` (${esc(error.message)})` : "";
+        list.innerHTML = `<p class="form-msg">Não foi possível carregar os relatos${detail}. Execute o SQL 07 desta versão no Supabase.</p>`;
       }
     }
   };
