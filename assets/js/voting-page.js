@@ -85,20 +85,18 @@ async function renderVotingGrid(grid) {
 
   const votacao = votacoes[0];
   const aberta = votacao.status === "aberta";
-  const mostrarRanking = votacao.mostrar_ranking !== false;
 
   if (statusText) {
     statusText.textContent = aberta
-      ? "Escolha uma opção e clique em votar. O número sobe na tela assim que o Supabase confirma."
+      ? "Escolha uma opção e clique em votar."
       : "Esta votação está fechada.";
   }
 
   const { data: opcoes, error: opcoesError } = await sb()
     .from("opcoes_votacao")
-    .select("*")
+    .select("id,votacao_id,titulo,descricao,imagem_url,imagem,hb_frase,hb_phrase_group,position")
     .eq("votacao_id", votacao.id)
-    .order("votos_count", { ascending: false })
-    .order("created_at", { ascending: true });
+    .order("position", { ascending: true });
 
   if (opcoesError) {
     console.error(opcoesError);
@@ -117,10 +115,6 @@ async function renderVotingGrid(grid) {
       <span class="status voting">OPÇÃO</span>
       <h3>${escapeHtml(opcao.titulo)}</h3>
       <p>${escapeHtml(opcao.descricao || "")}</p>
-      <div class="vote-line">
-        <span>Votos</span>
-        <strong id="votes-${escapeAttr(opcao.id)}">${mostrarRanking ? Number(opcao.votos_count || 0).toLocaleString("pt-BR") : "oculto"}</strong>
-      </div>
       <button class="btn small primary vote-btn" data-opcao-id="${escapeAttr(opcao.id)}" data-votacao-id="${escapeAttr(votacao.id)}" ${aberta ? "" : "disabled"}>${aberta ? "Votar" : "Fechada"}</button>
     </article>
   `).join("");
@@ -159,11 +153,6 @@ async function voteOption(opcaoId, votacaoId, button) {
       button.textContent = "Votar";
     }
     return;
-  }
-
-  const counter = document.getElementById(`votes-${opcaoId}`);
-  if (counter && data !== null && data !== undefined) {
-    counter.textContent = Number(data).toLocaleString("pt-BR");
   }
 
   alert("Voto registrado 💜");

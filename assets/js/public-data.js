@@ -108,9 +108,9 @@ async function getOpcoesVotacao(votacaoId) {
 
   if (window.BARMY360_SUPABASE) {
     const { data } = await BARMY360_SUPABASE.from("opcoes_votacao")
-      .select("*")
+      .select("id,votacao_id,titulo,descricao,imagem_url,imagem,hb_frase,hb_phrase_group,position")
       .eq("votacao_id", votacaoId)
-      .order("votos_count", { ascending: false });
+      .order("position", { ascending: true });
     return data || [];
   }
 
@@ -385,7 +385,6 @@ async function loadVotingCampaigns() {
   for (const votacao of votacoes) {
     const opcoes = await getOpcoesVotacao(votacao.id);
     const aberta = votacao.status === "aberta";
-    const mostrarRanking = votacao.mostrar_ranking !== false;
 
     blocks.push(`<section class="voting-campaign glow-card">
       <div class="section-heading">
@@ -404,13 +403,6 @@ async function loadVotingCampaigns() {
                     ${optionImageMarkup(o)}
                     <h3>${escapeHtml(o.titulo)}</h3>
                     <p>${escapeHtml(o.descricao || "")}</p>
-                    ${
-                      mostrarRanking
-                        ? `<div class="vote-line"><span>Votos</span><strong id="votes-${escapeAttr(o.id)}">${Number(
-                            o.votos_count || 0
-                          ).toLocaleString("pt-BR")}</strong></div>`
-                        : `<div class="vote-line"><span>Resultado</span><strong>oculto</strong></div>`
-                    }
                     <button class="btn small primary" onclick="voteOption('${escapeAttr(o.id)}', '${escapeAttr(
                     votacao.id
                   )}')" ${aberta ? "" : "disabled"}>${aberta ? "Votar" : "Fechada"}</button>

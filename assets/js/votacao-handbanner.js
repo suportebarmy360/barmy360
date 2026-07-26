@@ -32,7 +32,7 @@ function hbPhraseLabel(n){return hbSetting(`phrase_${n}`,`Frase ${n}`);}
 function hbOptionById(id){return hbState.opcoes.find(x=>String(x.id)===String(id));}
 function hbLimit(){ if(HB_PHASE===2) return 3; if(HB_PHASE===3) return 1; const n=Number(hbSetting("limit_per_phrase",1)); return Math.max(1,Math.min(20,Number.isFinite(n)?n:1)); }
 function hbExact(){return HB_PHASE===2||HB_PHASE===3;}
-function hbShowVoteCounts(){return !!(hbState.votacao&&hbState.votacao.mostrar_ranking);}
+function hbShowVoteCounts(){return false;}
 async function hbLoad(){
   if(!hbSb()){hbMsg("Supabase não conectado. Confira assets/js/config.js.","error");return;}
   const {data:settings}=await hbSb().from("site_settings").select("*").eq("id",1).maybeSingle();
@@ -47,7 +47,7 @@ async function hbLoad(){
     document.getElementById("hbReview").style.display="none";
     return hbRenderTopOnly();
   }
-  const {data:ops,error:oe}=await hbSb().from("opcoes_votacao").select("*").eq("votacao_id",hbState.votacao.id).order("hb_frase",{ascending:true}).order("position",{ascending:true}).order("created_at",{ascending:true});
+  const {data:ops,error:oe}=await hbSb().from("opcoes_votacao").select("id,votacao_id,titulo,descricao,imagem_url,imagem,hb_frase,hb_phrase_group,position").eq("votacao_id",hbState.votacao.id).order("hb_frase",{ascending:true}).order("position",{ascending:true});
   if(oe){hbMsg("Erro ao carregar artes: "+oe.message,"error");return;}
   hbState.opcoes=(ops||[]).filter(o=>[1,2,3].includes(Number(o.hb_frase||1)));
   hbRender();
@@ -172,12 +172,6 @@ async function hbConfirmVotes(){
   const btn=document.getElementById("hbConfirmBtn"); btn.disabled=true; btn.textContent="Enviando votos...";
   const {error}=await hbSb().rpc("registrar_votos_handbanner_confirmados",{votacao:String(hbState.votacao.id), opcoes:ids, voter_fingerprint:hbFingerprint()});
   if(error){hbMsg(error.message||"Erro ao confirmar votos.","error"); btn.disabled=false; btn.textContent="Confirmar voto"; return;}
-  ids.forEach(id=>{
-    const opt=hbOptionById(id);
-    if(opt){ opt.votos_count=Number(opt.votos_count||opt.votos||0)+1; opt.votos=opt.votos_count; }
-    const el=document.getElementById(`hb-votes-${String(id).replace(/[^a-zA-Z0-9_-]/g,"")}`) || document.getElementById(`hb-votes-${id}`);
-    if(el && opt) el.textContent=Number(opt.votos_count||0).toLocaleString("pt-BR");
-  });
   hbMsg("Voto enviado com sucesso 💜", "success"); btn.textContent="Voto enviado";
 }
 document.addEventListener("DOMContentLoaded",()=>{
