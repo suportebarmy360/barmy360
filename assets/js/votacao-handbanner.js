@@ -47,7 +47,20 @@ async function hbLoad(){
     document.getElementById("hbReview").style.display="none";
     return hbRenderTopOnly();
   }
-  const {data:ops,error:oe}=await hbSb().from("opcoes_votacao").select("*").eq("votacao_id",hbState.votacao.id).order("hb_frase",{ascending:true}).order("position",{ascending:true}).order("created_at",{ascending:true});
+  const {data:ops,error:oe}=await hbSb().from("opcoes_votacao")..select(`
+id,
+votacao_id,
+titulo,
+descricao,
+imagem_url,
+imagem,
+hb_frase,
+hb_phrase_group,
+position
+`)
+  .eq("votacao_id", hbState.votacao.id)
+  .order("hb_frase", {ascending:true})
+  .order("position", {ascending:true});
   if(oe){hbMsg("Erro ao carregar artes: "+oe.message,"error");return;}
   hbState.opcoes=(ops||[]).filter(o=>[1,2,3].includes(Number(o.hb_frase||1)));
   hbRender();
