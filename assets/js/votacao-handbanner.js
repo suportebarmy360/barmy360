@@ -45,11 +45,12 @@ async function hbLoad(){
   if(!hbState.published){
     document.getElementById("hbVotingSections").innerHTML = `<section class="admin-card glow-card"><h2>Página ainda não publicada</h2><p>As ADMs ainda não liberaram esta votação.</p></section>`;
     document.getElementById("hbReview").style.display="none";
-    return hbRenderTopOnly(); 
-    const {data:ops,error:oe}=await hbSb().from("opcoes_votacao").select("*").eq("votacao_id",hbState.votacao.id).order("hb_frase",{ascending:true}).order("position",{ascending:true}).order("created_at",{ascending:true});
-if(oe){
-  hbMsg("Erro ao carregar artes: "+oe.message,"error");
-  return;
+    return hbRenderTopOnly();
+  }
+  const {data:ops,error:oe}=await hbSb().from("opcoes_votacao").select("*").eq("votacao_id",hbState.votacao.id).order("hb_frase",{ascending:true}).order("position",{ascending:true}).order("created_at",{ascending:true});
+  if(oe){hbMsg("Erro ao carregar artes: "+oe.message,"error");return;}
+  hbState.opcoes=(ops||[]).filter(o=>[1,2,3].includes(Number(o.hb_frase||1)));
+  hbRender();
 }
 function hbRenderTopOnly(){
   const s=hbState.settings||{}, v=hbState.votacao||{};
