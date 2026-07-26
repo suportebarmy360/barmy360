@@ -49,18 +49,12 @@ async function hbLoad(){
   }
   const {data:ops,error:oe}=await hbSb()
   .from("opcoes_votacao")
-  .select(`
-    id,
-    votacao_id,
-    titulo,
-    descricao,
-    imagem_url,
-    hb_frase,
-    position
-  `)
+  .select("*")
   .eq("votacao_id",hbState.votacao.id)
   .order("hb_frase",{ascending:true})
-  .order("position",{ascending:true});
+  .order("position",{ascending:true})
+  .order("created_at",{ascending:true});
+  if(oe){hbMsg("Erro ao carregar artes: "+oe.message,"error");return;}
 
 if(oe){
   hbMsg("Erro ao carregar artes: "+oe.message,"error");
